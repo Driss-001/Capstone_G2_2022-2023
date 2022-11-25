@@ -3,7 +3,7 @@ import math
 
 
 #constants
-
+path_length = 5 # in meters
 
 class PI_Controller:
 
