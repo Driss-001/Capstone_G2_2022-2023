@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import time
 import os 
 from pathlib2 import Path
+import urllib3
 
 #Constants
 PI=mt.pi
@@ -50,21 +51,50 @@ class Resonator:
 
 
     #This function calculates the spectral shift as a funciton of chip temperature
-    def temperature_wavelength_shift(self,temp)->np.array:
+    def temperature_wavelength_shift(self, temp:float)->np.array:
         alpha_w_si=2.5e-6  #coefficient of thermal expansion of Si
         alpha_w_sio2=1e-5  #coefficient of thermal expansion of SiO2 (not used)
         sigma_t=1.97e-4  #rate of change of effective index with temp (thermoooptic effect)
-        thermal_expansion=alpha_w_si*n_eff*self.wavelength*temp/self.n_g; #thermal expansion effect (negligible)
+        thermal_expansion=alpha_w_si*self.n_eff*self.wavelength*temp/self.n_g; #thermal expansion effect (negligible)
         thermooptic_effect=sigma_t*self.wavelength*temp/self.n_g;      #thermooptic effect, change in index with temperature
         wave_shift = thermal_expansion + thermooptic_effect         #add the two effects together
         return wave_shift
 
     def produce_spectrum(self)->None:
-        wave_shift=np.vectorize(self.temperature_wavelength_shift)(self.temperature)  #The wavelength shift for the spectrum with temeprature
+        
+        self.through_port_spectrum = []
         prop_constant=2*PI*self.n_eff/self.wavelength
-        #theta is the phase of the resonance cavity (ring resonator)
-        self.theta=prop_constant*self.ring_length #no shift
-        self.theta2=(2*PI*n_eff/(self.wavelength-wave_shift))*self.ring_length #with shift
-        self.drop_port_spectrum=((1-self.r1**2)*(1-self.r2**2)*self.a)/(1-2*self.r1*self.r2*self.a*np.cos(self.theta)+(self.r1*self.r2*self.a)**2)  #How the drop port spectrum is calculated
-        self.through_port_spectrum=((self.r2**2)*(self.a**2)-2*self.r1*self.r2*self.a*np.cos(self.theta2)+self.r1**2)/(1-2*self.r1*self.r2*a*np.cos(self.theta2)+(self.r1*self.r2*self.a)**2) #calculation of through port spectrum
+        theta=prop_constant*self.ring_length #no shift
+        self.drop_port_spectrum=((1-self.r1**2)*(1-self.r2**2)*self.a)/(1-2*self.r1*self.r2*self.a*np.cos(theta)+(self.r1*self.r2*self.a)**2)  #How the drop port spectrum is calculated
+        for i in self.temperature:
+            wave_shift=self.temperature_wavelength_shift(i)  #The wavelength shift for the spectrum with temeprature
+            #theta is the phase of the resonance cavity (ring resonator)
+            theta2=(2*PI*self.n_eff/(self.wavelength-wave_shift))*self.ring_length #with shift
+            
+            through_port_spectrum=((self.r2**2)*(self.a**2)-2*self.r1*self.r2*self.a*np.cos(theta2)+self.r1**2)/(1-2*self.r1*self.r2*a*np.cos(theta2)+(self.r1*self.r2*self.a)**2) #calculation of through port spectrum
+            
+            self.through_port_spectrum+=[through_port_spectrum]
+
+    
+    def save_spectrum(self)->None:
+        pass    
+
+
+    def display_spectrum(self,range:range)->None:
+        plt.figure(dpi=600)
+        plt.plot(self.wavelength,self.drop_port_spectrum)
+        legend = ["drop port spectrum"]
+        for i in range:
+            plt.plot(self.wavelength,self.through_port_spectrum[i])
+            legend+=[f"through port @ T°={self.temperature[i]}°C"]    
+
+        plt.legend(legend)
+        plt.xlabel("Wavelength(m)")
+        plt.ylabel("Normalised Power")
+        plt.show()
+
+    def transmit_spectrum(self)->None:
+        pass
+
+
             
