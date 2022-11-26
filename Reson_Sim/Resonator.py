@@ -61,19 +61,21 @@ class Resonator:
         return wave_shift
 
     def produce_spectrum(self)->None:
-        
+        self.drop_port_spectrum = []
         self.through_port_spectrum = []
         prop_constant=2*PI*self.n_eff/self.wavelength
         theta=prop_constant*self.ring_length #no shift
-        self.drop_port_spectrum=((1-self.r1**2)*(1-self.r2**2)*self.a)/(1-2*self.r1*self.r2*self.a*np.cos(theta)+(self.r1*self.r2*self.a)**2)  #How the drop port spectrum is calculated
+        
         for i in self.temperature:
             wave_shift=self.temperature_wavelength_shift(i)  #The wavelength shift for the spectrum with temeprature
             #theta is the phase of the resonance cavity (ring resonator)
             theta2=(2*PI*self.n_eff/(self.wavelength-wave_shift))*self.ring_length #with shift
             
             through_port_spectrum=((self.r2**2)*(self.a**2)-2*self.r1*self.r2*self.a*np.cos(theta2)+self.r1**2)/(1-2*self.r1*self.r2*a*np.cos(theta2)+(self.r1*self.r2*self.a)**2) #calculation of through port spectrum
+            drop_port_spectrum=((1-self.r1**2)*(1-self.r2**2)*self.a)/(1-2*self.r1*self.r2*self.a*np.cos(theta2)+(self.r1*self.r2*self.a)**2)  #How the drop port spectrum is calculated
             
             self.through_port_spectrum+=[through_port_spectrum]
+            self.drop_port_spectrum+=[drop_port_spectrum]
 
     
     def save_spectrum(self)->None:
@@ -82,11 +84,12 @@ class Resonator:
 
     def display_spectrum(self,range:range)->None:
         plt.figure(dpi=600)
-        plt.plot(self.wavelength,self.drop_port_spectrum)
-        legend = ["drop port spectrum"]
+        
+        legend = []
         for i in range:
+            plt.plot(self.wavelength,self.drop_port_spectrum[i])
             plt.plot(self.wavelength,self.through_port_spectrum[i])
-            legend+=[f"through port @ T°={self.temperature[i]}°C"]    
+            legend+=[f"drop port @ T°={self.temperature[i]}°C",f"through port @ T°={self.temperature[i]}°C"]    
 
         plt.legend(legend)
         plt.xlabel("Wavelength(m)")
