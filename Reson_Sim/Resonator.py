@@ -158,7 +158,7 @@ class Resonator:
             
             through_port_spectrum=((self.r2**2)*(self.a**2)-2*self.r1*self.r2*self.a*np.cos(theta2)+self.r1**2)/(1-2*self.r1*self.r2*a*np.cos(theta2)+(self.r1*self.r2*self.a)**2) #calculation of through port spectrum
             drop_port_spectrum=((1-self.r1**2)*(1-self.r2**2)*self.a)/(1-2*self.r1*self.r2*self.a*np.cos(theta2)+(self.r1*self.r2*self.a)**2)  #How the drop port spectrum is calculated
-            output_spectrum  = abs_spectrum[0]*drop_port_spectrum
+            output_spectrum  = abs_spectrum[0]*through_port_spectrum
             correlation  = sps(output_spectrum,self.wavelength)
             
             self.through_port_spectrum+=[through_port_spectrum]
@@ -207,7 +207,7 @@ class Resonator:
         
 
 
-    def transmit_spectrum(self)->None:
+    def transmit_spectrum(self)->None: #send spectrum to the raspberry-pi
         pass
 
 
