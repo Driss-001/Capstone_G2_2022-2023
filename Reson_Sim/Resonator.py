@@ -55,7 +55,7 @@ C2H2=0
 CH3=0
 CH4=0
 CO=0
-CO2=75
+CO2=25
 H2O=0
 HCN=0
 NH3=0
@@ -189,13 +189,13 @@ class Resonator:
     def display_output(self,range:range)->None:
         plt.figure(dpi=600)
         legend = ["absorption spectrum"]
-        plt.plot(self.wavelength,self.abs_spectrum)
+        plt.plot(self.wavelength,self.temperature[-1]+self.abs_spectrum)
         for i in range:
             delta = self.drop_port_spectrum[i]-self.output_spectrum[i]
-            plt.plot(self.wavelength,self.output_spectrum[i],linewidth = 0.5)
+            plt.plot(self.wavelength,self.temperature[i]+self.output_spectrum[i],linewidth = 0.5)
             legend+=[f"Resonator Output @ T° change ={self.temperature[i]}°C"]
         
-        plt.legend(legend)
+        #plt.legend(legend,framealpha = 0.01,loc='lower right')
         plt.xlabel("Wavelength(m)")
         plt.ylabel("Normalised Power")
 
@@ -204,6 +204,7 @@ class Resonator:
         plt.plot(self.temperature,self.correlation)
         plt.xlabel("Temperature change °C")
         plt.ylabel("Correlation")
+        
         
 
 

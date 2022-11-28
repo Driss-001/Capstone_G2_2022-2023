@@ -1,5 +1,5 @@
 import numpy as np 
-import math, os
+import math, os, pip, serial
 
 
 #constants
