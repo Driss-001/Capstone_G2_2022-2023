@@ -9,4 +9,5 @@ Control System centered around Rpi-4
 ![](https://assets.raspberrypi.com/static/raspberry-pi-4-labelled-f5e5dcdf6a34223235f83261fa42d1e8.png) 
 ## Step 2: Prototype 1
 
+### Current Design Diagram
 ![](PostVisit_software.drawio.png)
