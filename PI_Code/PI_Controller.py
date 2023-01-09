@@ -17,6 +17,7 @@ ADC_res =  16
 
 #create I2C bus
 i2c = busio.I2C(board.SCL,board.SDA)
+dac = MCP.MCP4725(i2c)
 
 class PI_Controller:
     """Raspberry pi code to activate the (S)LED, heat the u-chip and collect signal from the photodiode"""
