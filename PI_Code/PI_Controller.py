@@ -1,17 +1,22 @@
+import time,os,urllib3,board,busio
 import numpy as np 
 import math as mt
 from scipy.interpolate import InterpolatedUnivariateSpline
 import matplotlib.pyplot as plt  
-import time
-import os 
 from pathlib2 import Path
-import urllib3
 from astropy.io import fits 
 import astropy.modeling.functional_models as astromodels
 from scipy.integrate import simpson as sps   
+import adafruit_mcp4725 as MCP
+import adafruit_ads1x15 as ADS
+
 #constants
 path_length = 5 # in meters
+DAC_res =  12
+ADC_res =  16
 
+#create I2C bus
+i2c = busio.I2C(board.SCL,board.SDA)
 
 class PI_Controller:
     """Raspberry pi code to activate the (S)LED, heat the u-chip and collect signal from the photodiode"""
@@ -42,3 +47,7 @@ class PI_Controller:
     #function reading the photodiode output , ADC    
     def __PhotoDRead(self):
         pass    
+
+    #function storing initial T°=0 absorption throughport spectrum to compare with T°>0 spectrums 
+    def _Calibrate(self):
+        pass
