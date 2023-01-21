@@ -1,4 +1,4 @@
-import time,os,urllib3,board,busio
+import time,os,urllib3,board,busio,pwmio
 import numpy as np 
 import math as mt
 from scipy.interpolate import InterpolatedUnivariateSpline
@@ -29,11 +29,11 @@ class PI_Controller:
     def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0) -> None:
         self.test_status = test 
         self.continuous = continuous #if reading loops itself
-
+        self.active = False
         match self.test_status:
             case 0: #PI simple signals
                 self._test = np.bool_([0,0]) 
-                self.test_duration = test_duration 
+                self.test_duration = test_duration #duration in min
             case 1: #Proto 1
                 self._test = np.bool_([0,1]) 
                 self.test_duration = test_duration 
@@ -80,4 +80,7 @@ class PI_Controller:
             pass
         else:
             pass
+        pass
+
+    def _HW_start(self):
         pass
