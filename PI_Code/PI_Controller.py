@@ -1,4 +1,4 @@
-import time,os,urllib3,board,busio,pwmio
+import time,os,urllib3,board,busio,pwmio,analogio, threading
 import numpy as np 
 import math as mt
 from scipy.interpolate import InterpolatedUnivariateSpline
@@ -18,9 +18,14 @@ V_Max = 3.3 #max gpio output voltage
 
 #constant functions
 dac_raw = lambda volt: volt/V_Max*2**DAC_res
-#create I2C bus
+#create I2C buses
 i2c = busio.I2C(board.SCL,board.SDA)
 dac = MCP.MCP4725(i2c)
+get_dacvolt  = lambda x: x*V_Max/2**ADC_res
+
+#pwm init
+pwm = pwmio.PWMOut(board.13, frequency=1000)
+duty_cycle = lambda x: 2**16/100*x #Duty cycle is 16bits, return duty cycle percentage
 
 class PI_Controller:
     """Raspberry pi code to activate the (S)LED, heat the u-chip and collect signal from the photodiode"""
@@ -32,17 +37,19 @@ class PI_Controller:
         self.active = False
         match self.test_status:
             case 0: #PI simple signals
-                self._test = np.bool_([0,0]) 
-                self.test_duration = test_duration #duration in min
+                self._test = np.bool_([0,0])  #voltage test
+                self.Activate() #switch on
             case 1: #Proto 1
                 self._test = np.bool_([0,1]) 
-                self.test_duration = test_duration 
+                self.time = time.time()
+                self.test_duration = test_duration*60 #duration in sec
             case 2: #Proto 2
-                self._test = np.bool_([1,0]) 
-                self.test_duration = test_duration     
+                self._test = np.bool_([1,0])  #signal test
+                self.time = time.time()
+                self.test_duration = test_duration*60 #duration in sec   
             case 3: #Real case
                 self._test = np.bool_([1,1]) 
-                  
+        
             
 
     """Private functions in charge of hardware signal sending and collection"""
@@ -59,16 +66,13 @@ class PI_Controller:
     #function producing ramp signal to heat the u-chip, DAC
     def __Temp(self):
 
-        if not self._test[1]:
-            pass
-        else:
-            pass
-        pass
+        pwm.duty_cycle = duty_cycle(100) #100% Duty cycle for DC voltage
 
 
     #function reading the photodiode output , ADC    
     def __PhotoDRead(self):
-        if not self._test[1]:
+
+        if not self._test[0]: #case signals
             pass
         else:
             pass
@@ -82,5 +86,15 @@ class PI_Controller:
             pass
         pass
 
-    def _HW_start(self):
-        pass
+    def _HW_start(self): #activate all hardware signals and readers
+        self._Calibrate()
+        while self.active:    
+            self.__LED()
+            self.__Temp()
+            self.__PhotoDRead()
+
+    def Activate(self): #activate switch function , auto-start
+        self.active = not self.active
+        if self.active:
+             self.th1 = threading.Thread(target = self._HW_start)
+             self.th1.daemon = True
