@@ -24,6 +24,8 @@ i2c2 = busio.I2C(board.SCL6,board.SDA6)
 dac = MCP.MCP4725(i2c1)
 adc = ADS.ADS1115(i2c2)
 get_dacvolt  = lambda x: x*V_Max/2**ADC_res
+get_adcvolt = lambda x: x*V_Max/2**DAC_res
+Gain = 1
 
 #pwm init
 pwm = pwmio.PWMOut(board.13, frequency=1000)
@@ -37,6 +39,7 @@ class PI_Controller:
         self.test_status = test 
         self.continuous = continuous #if reading loops itself
         self.active = False
+        
         match self.test_status:
             case 0: #PI simple signals
                 self._test = np.bool_([0,0])  #voltage test
@@ -75,7 +78,13 @@ class PI_Controller:
     def __PhotoDRead(self):
 
         if not self._test[0]: #case signals
-            pass
+            values = [0]*4
+            for i in range(4):
+                 # Read the specified ADC channel using the previously set gain value.
+                values[i] = adc.read_adc(i, gain=Gain) 
+            values = np.vectorize(get_dacvolt)(np.array(values))
+            print(values+" V")
+
         else:
             pass
         pass    
@@ -94,6 +103,11 @@ class PI_Controller:
             self.__LED()
             self.__Temp()
             self.__PhotoDRead()
+            time.sleep(1)
+
+    def _printHeader(self):
+        print('| {0:>6} | {1:>6} | {2:>6} | {3:>6} |'.format(*range(4)))
+        print('-' * 37)        
 
     def Activate(self): #activate switch function , auto-start
         self.active = not self.active
