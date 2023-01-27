@@ -28,7 +28,7 @@ get_adcvolt = lambda x: x*V_Max/2**DAC_res
 Gain = 1
 
 #pwm init
-pwm = pwmio.PWMOut(board.13, frequency=1000)
+pwm = pwmio(board.GPIO13,frequency = 1e3)
 duty_cycle = lambda x: 2**16/100*x #Duty cycle is 16bits, return duty cycle percentage
 
 class PI_Controller:
