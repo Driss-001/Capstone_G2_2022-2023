@@ -43,6 +43,7 @@ class PI_Controller:
         match self.test_status:
             case 0: #PI simple signals
                 self._test = np.bool_([0,0])  #voltage test
+                self.counter = 0
                 self.Activate() #switch on
             case 1: #Proto 1
                 self._test = np.bool_([0,1]) 
@@ -63,7 +64,10 @@ class PI_Controller:
 
         #no proto or proto 1
         if not self._test[1]:
-            pass
+            if self.counter == 2**DAC_res:
+                self.counter = 0
+            dac.raw_value = self.counter
+            self.counter += 2**DAC_res/16
         else:
             pass
         pass
