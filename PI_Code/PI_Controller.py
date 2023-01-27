@@ -114,3 +114,7 @@ class PI_Controller:
         if self.active:
              self.th1 = threading.Thread(target = self._HW_start)
              self.th1.daemon = True
+
+ 
+ if __name__ == '__main__':
+    test0 =PI_Controller()
