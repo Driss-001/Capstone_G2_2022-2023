@@ -1,4 +1,4 @@
-import time,os,urllib3,board,busio,pwmio,analogio, threading
+import time,os,urllib3,busio,pwmio, threading, board, digitalio
 import numpy as np 
 import math as mt
 from scipy.interpolate import InterpolatedUnivariateSpline
@@ -19,8 +19,8 @@ V_Max = 3.3 #max gpio output voltage
 #constant functions
 dac_raw = lambda volt: volt/V_Max*2**DAC_res
 #create I2C buses
-i2c1 = busio.I2C(board.SCL1,board.SDA1)
-i2c2 = busio.I2C(board.SCL6,board.SDA6)
+i2c1 = busio.I2C(board.SCL,board.SDA)
+i2c2 = busio.I2C(board.D23,board.D22)
 dac = MCP.MCP4725(i2c1)
 adc = ADS.ADS1115(i2c2)
 get_dacvolt  = lambda x: x*V_Max/2**ADC_res
