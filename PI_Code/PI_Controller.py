@@ -1,6 +1,7 @@
 
 import time,os,urllib3,board,busio,pwmio,analogio, threading,smbus2
 import math as mt
+import numpy a np
 from scipy.interpolate import InterpolatedUnivariateSpline
 import matplotlib.pyplot as plt  
 from pathlib2 import Path
