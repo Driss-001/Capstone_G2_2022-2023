@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 import time,os,urllib3,busio,pwmio, threading, board, digitalio
 import numpy as np 
+=======
+import time,os,urllib3,board,busio,pwmio,analogio, threading,smbus2
+>>>>>>> 74ed66334700ac5d208609a228c5215f85faef54
 import math as mt
 from scipy.interpolate import InterpolatedUnivariateSpline
 import matplotlib.pyplot as plt  
@@ -19,10 +23,18 @@ V_Max = 3.3 #max gpio output voltage
 #constant functions
 dac_raw = lambda volt: volt/V_Max*2**DAC_res
 #create I2C buses
+<<<<<<< HEAD
 i2c1 = busio.I2C(board.SCL,board.SDA)
 i2c2 = busio.I2C(board.D23,board.D22)
 dac = MCP.MCP4725(i2c1)
 adc = ADS.ADS1115(i2c2)
+=======
+dac_address = 0x62
+adc_address = 0x48
+
+dac = MCP.MCP4725(dac_address)
+adc = ADS.ADS1115(adc_address)
+>>>>>>> 74ed66334700ac5d208609a228c5215f85faef54
 get_dacvolt  = lambda x: x*V_Max/2**ADC_res
 get_adcvolt = lambda x: x*V_Max/2**DAC_res
 Gain = 1
@@ -75,7 +87,7 @@ class PI_Controller:
     #function producing ramp signal to heat the u-chip, DAC
     def __Temp(self):
 
-        pwm.duty_cycle = duty_cycle(100) #100% Duty cycle for DC voltage
+        pwm.duty_cycle = duty_cycle(90) #90% Duty cycle for DC voltage
 
 
     #function reading the photodiode output , ADC    
