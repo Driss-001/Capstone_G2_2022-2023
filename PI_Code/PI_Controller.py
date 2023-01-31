@@ -1,7 +1,9 @@
 
-import time,os,urllib3,board,busio,pwmio,analogio, threading,smbus2
+import time,os,urllib3,board,busio,pwmio,threading
+from adafruit_extended_bus import ExtendedI2C as I2C
+import RPI.GPIO as gpio
 import math as mt
-import numpy a np
+import numpy as np
 from scipy.interpolate import InterpolatedUnivariateSpline
 import matplotlib.pyplot as plt  
 from pathlib2 import Path
@@ -9,7 +11,7 @@ from astropy.io import fits
 import astropy.modeling.functional_models as astromodels
 from scipy.integrate import simpson as sps   
 import adafruit_mcp4725 as MCP
-import adafruit_ads1x15 as ADS
+import adafruit_ads1x15.ads1115 as ADS
 
 #constants
 path_length = 5 # in meters
@@ -23,15 +25,17 @@ dac_raw = lambda volt: volt/V_Max*2**DAC_res
 
 dac_address = 0x62
 adc_address = 0x48
+i2c1 = I2C(1)
+i2c2 = I2C(6)
 
-dac = MCP.MCP4725(dac_address)
-adc = ADS.ADS1115(adc_address)
+dac = MCP.MCP4725(address=dac_address,i2c=i2c1)
+adc = ADS.ADS1115(address=adc_address,i2c = i2c2)
 get_dacvolt  = lambda x: x*V_Max/2**ADC_res
 get_adcvolt = lambda x: x*V_Max/2**DAC_res
 Gain = 1
 
 #pwm init
-pwm = pwmio(board.GPIO13,frequency = 1e3)
+pwm = pwmio(board.D13,frequency = 10e3)
 duty_cycle = lambda x: 2**16/100*x #Duty cycle is 16bits, return duty cycle percentage
 
 class PI_Controller:
