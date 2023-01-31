@@ -10,5 +10,7 @@ Pins setup<br>
 
 ADC module :Akozon ADS1115 16-Bit I2C High Precision ADC Development Board for Raspberry Pi <br> ![](https://m.media-amazon.com/images/I/61+2jCMFh-L._AC_SL1001_.jpg) ![](https://m.media-amazon.com/images/I/61Iztq-gopL._AC_SL1001_.jpg)<br>
 
-DAC module:Adafruit MCP4725 Breakout Board - 12-Bit DAC w/I2C Interface [ADA935]<br> ![](https://m.media-amazon.com/images/I/8151Fv17XSL._AC_SL1200_.jpg)
+DAC module:Adafruit MCP4725 Breakout Board - 12-Bit DAC w/I2C Interface [ADA935]<br> ![](https://m.media-amazon.com/images/I/8151Fv17XSL._AC_SL1200_.jpg)<br>
+
+ADC/DAC pins connection ![Schematics](Capstone_G2_2022-2023\Circuits\Rpi_circuit_test0_bb.png?raw=true "RPi 4 ADC/DAC")
 
