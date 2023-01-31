@@ -1,7 +1,6 @@
 
 import time,os,urllib3,board,busio,pwmio,threading
 from adafruit_extended_bus import ExtendedI2C as I2C
-import RPI.GPIO as gpio
 import math as mt
 import numpy as np
 from scipy.interpolate import InterpolatedUnivariateSpline
@@ -35,7 +34,7 @@ get_adcvolt = lambda x: x*V_Max/2**DAC_res
 Gain = 1
 
 #pwm init
-pwm = pwmio(board.D13,frequency = 10e3)
+pwm = pwmio.PWMOut(board.D13,frequency = 10e3)
 duty_cycle = lambda x: 2**16/100*x #Duty cycle is 16bits, return duty cycle percentage
 
 class PI_Controller:
