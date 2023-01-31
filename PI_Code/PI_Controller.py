@@ -47,11 +47,13 @@ class PI_Controller:
         self.continuous = continuous #if reading loops itself
         self.active = False
         
+        
         match self.test_status:
             case 0: #PI simple signals
-                self._test = np.bool_([0,0])  #voltage test
-                self.counter = 0
-                self.Activate() #switch on
+                self._test = np.bool_([0,0]) #voltage test
+                self.start_time = time.time()
+                self.test_duration = test_duration  
+                self.Run() #switch on
             case 1: #Proto 1
                 self._test = np.bool_([0,1]) 
                 self.time = time.time()
@@ -68,7 +70,7 @@ class PI_Controller:
     """Private functions in charge of hardware signal sending and collection"""
     #function governing LED activation, DAC
     def __LED(self):
-
+        print("LED activating...")
         #no proto or proto 1
         if not self._test[1]:
             if self.counter == 2**DAC_res:
@@ -81,13 +83,13 @@ class PI_Controller:
 
     #function producing ramp signal to heat the u-chip, DAC
     def __Temp(self):
-
-        pwm.duty_cycle = duty_cycle(90) #90% Duty cycle for DC voltage
+        print("Applying voltage to the Chip...")
+        pwm.duty_cycle = duty_cycle(99) #99% Duty cycle for DC voltage
 
 
     #function reading the photodiode output , ADC    
     def __PhotoDRead(self):
-
+        print("Photodiode reading start...")
         if not self._test[0]: #case signals
             values = [0]*4
             for i in range(4):
@@ -110,22 +112,28 @@ class PI_Controller:
 
     def _HW_start(self): #activate all hardware signals and readers
         self._Calibrate()
-        while self.active:    
+        while self.active:    #main parallel thread loop
             self.__LED()
             self.__Temp()
             self.__PhotoDRead()
-            time.sleep(1)
+            time.sleep(0.1)
+    
 
-    def _printHeader(self):
-        print('| {0:>6} | {1:>6} | {2:>6} | {3:>6} |'.format(*range(4)))
-        print('-' * 37)        
-
-    def Activate(self): #activate switch function , auto-start
-        self.active = not self.active
+    def Run(self): #activate switch function , auto-start
         if self.active:
              self.th1 = threading.Thread(target = self._HW_start)
              self.th1.daemon = True
+        if (time.time()-self.start_time) == 60*self.test_duration: #finish test
+            print(f"{self.test_duration} min have passed, test finished!")
+            self.De_Activate()
 
- 
+
+    def Switch(self): #toggle activate deactivate
+        
+        self.active = not self.active
+
+    def De_Activate(self):
+        self.active = False
+
 if __name__ == '__main__':
-    test0 = PI_Controller()
+    test0 = PI_Controller(test_duration=3)
