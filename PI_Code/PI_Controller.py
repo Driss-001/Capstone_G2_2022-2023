@@ -10,7 +10,7 @@ from astropy.io import fits
 import astropy.modeling.functional_models as astromodels
 from scipy.integrate import simpson as sps   
 import adafruit_mcp4725 as MCP
-import adafruit_ads1x15.ads1115 as ADS
+import Adafruit_ADS1x15.ADS1x15 as ADS
 
 #constants
 path_length = 5 # in meters
@@ -44,13 +44,13 @@ class PI_Controller:
     def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0) -> None:
         self.test_status = test 
         self.continuous = continuous #if reading loops itself
-        self.active = False
-        
+        self.active = True
+        self.start_time = time.time()
         
         match self.test_status:
             case 0: #PI simple signals
                 self._test = np.bool_([0,0]) #voltage test
-                self.start_time = time.time()
+                #print("flag")     
                 self.test_duration = test_duration  
                 self.Run() #switch on
             case 1: #Proto 1
@@ -69,7 +69,7 @@ class PI_Controller:
     """Private functions in charge of hardware signal sending and collection"""
     #function governing LED activation, DAC
     def __LED(self):
-        print("LED activating...")
+        print(f"LED activating at {self._now()}s...")
         #no proto or proto 1
         if not self._test[1]:
             if self.counter == 2**DAC_res:
@@ -94,13 +94,16 @@ class PI_Controller:
             for i in range(4):
                  # Read the specified ADC channel using the previously set gain value.
                 values[i] = adc.read_adc(i, gain=Gain) 
-            values = np.vectorize(get_dacvolt)(np.array(values))
+            values = np.vectorize(get_adcvolt)(np.array(values))
             print(values+" V")
 
         else:
             pass
         pass    
 
+    def _now(self):
+        return time.time()-self.start_time 
+        
     #function storing initial T°=0 absorption throughport spectrum to compare with T°>0 spectrums 
     def _Calibrate(self):
         if not self._test[1]:
@@ -119,10 +122,15 @@ class PI_Controller:
     
 
     def Run(self): #activate switch function , auto-start
-        if self.active:
-             self.th1 = threading.Thread(target = self._HW_start)
-             self.th1.daemon = True
-        if (time.time()-self.start_time) == 60*self.test_duration: #finish test
+        #if self.active:
+        #    #print("flag")
+        #    self.th1 = threading.Thread(target = self._HW_start)
+        #    self.th1.daemon = True
+        self.counter = 0
+        while self._now()<= 60*self.test_duration: 
+            self._HW_start()
+
+        if self._now()>= 60*self.test_duration: #finish test
             print(f"{self.test_duration} min have passed, test finished!")
             self.De_Activate()
 
@@ -135,4 +143,4 @@ class PI_Controller:
         self.active = False
 
 if __name__ == '__main__':
-    test0 = PI_Controller(test_duration=3)
+    test0 = PI_Controller(test_duration=1)
