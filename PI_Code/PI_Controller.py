@@ -32,7 +32,7 @@ dac = MCP.MCP4725(address=dac_address,i2c=i2c1)
 adc = ADS.ADS1115(address=adc_address,i2c = i2c2)
 get_dacvolt  = lambda x: x*V_Max/2**ADC_res
 get_adcvolt = lambda x: x*V_Max/2**DAC_res
-Gain = ADC_res/4
+Gain = ADC_res/16
 
 #pwm init
 pwm = pwmio.PWMOut(board.D13,frequency = 10e3)
@@ -51,7 +51,7 @@ class PI_Controller:
         match self.test_status:
             case 0: #PI simple signals
                 self._test = np.bool_([0,0]) #voltage test
-                ADS.mode = Mode.CONTINUOUS # put ads in continuous mode for reading speed   
+                ADS.mode = 0 # put ads in continuous mode for reading speed   
                 self.test_duration = test_duration  
                 self.Run() #switch on
             case 1: #Proto 1
@@ -93,14 +93,14 @@ class PI_Controller:
         chan0 = AnalogIn(adc,ADS.P0)
         if not self._test[0]: #case signals
             chan1 = AnalogIn(adc,ADS.P1)
-            print(f"Channel 0 ADC value: {chan0.value}, voltage = {chan0.voltage} V")
-            print(f"Channel 1 ADC value: {chan1.value}, voltage = {chan1.voltage} V")
+            print(f"Channel 0 ADC value: {round(chan0.value,3)}, voltage = {round(chan0.voltage,3)} V")
+            print(f"Channel 1 ADC value: {round(chan1.value,3)}, voltage = {round(chan1.voltage,3)} V")
         else:
             pass
         pass    
 
     def _now(self):
-        return time.time()-self.start_time 
+        return round(time.time()-self.start_time,3) 
         
     #function storing initial T°=0 absorption throughport spectrum to compare with T°>0 spectrums 
     def _Calibrate(self):
