@@ -10,7 +10,8 @@ from astropy.io import fits
 import astropy.modeling.functional_models as astromodels
 from scipy.integrate import simpson as sps   
 import adafruit_mcp4725 as MCP
-import Adafruit_ADS1x15.ADS1x15 as ADS
+import adafruit_ads1x15.ads1115 as ADS
+from adafruit_ads1x15.analog_in import AnalogIn
 
 #constants
 path_length = 5 # in meters
@@ -31,7 +32,7 @@ dac = MCP.MCP4725(address=dac_address,i2c=i2c1)
 adc = ADS.ADS1115(address=adc_address,i2c = i2c2)
 get_dacvolt  = lambda x: x*V_Max/2**ADC_res
 get_adcvolt = lambda x: x*V_Max/2**DAC_res
-Gain = 1
+Gain = ADC_res/4
 
 #pwm init
 pwm = pwmio.PWMOut(board.D13,frequency = 10e3)
@@ -50,7 +51,7 @@ class PI_Controller:
         match self.test_status:
             case 0: #PI simple signals
                 self._test = np.bool_([0,0]) #voltage test
-                #print("flag")     
+                ADS.mode = Mode.CONTINUOUS # put ads in continuous mode for reading speed   
                 self.test_duration = test_duration  
                 self.Run() #switch on
             case 1: #Proto 1
@@ -89,14 +90,11 @@ class PI_Controller:
     #function reading the photodiode output , ADC    
     def __PhotoDRead(self):
         print("Photodiode reading start...")
+        chan0 = AnalogIn(adc,ADS.P0)
         if not self._test[0]: #case signals
-            values = [0]*4
-            for i in range(4):
-                 # Read the specified ADC channel using the previously set gain value.
-                values[i] = adc.read_adc(i, gain=Gain) 
-            values = np.vectorize(get_adcvolt)(np.array(values))
-            print(values+" V")
-
+            chan1 = AnalogIn(adc,ADS.P1)
+            print(f"Channel 0 ADC value: {chan0.value}, voltage = {chan0.voltage} V")
+            print(f"Channel 1 ADC value: {chan1.value}, voltage = {chan1.voltage} V")
         else:
             pass
         pass    
