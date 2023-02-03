@@ -30,8 +30,8 @@ i2c2 = I2C(6)
 
 dac = MCP.MCP4725(address=dac_address,i2c=i2c1)
 adc = ADS.ADS1115(address=adc_address,i2c = i2c2)
-get_dacvolt  = lambda x: x*V_Max/2**ADC_res
-get_adcvolt = lambda x: x*V_Max/2**DAC_res
+#get_dacvolt  = lambda x: x*V_Max/2**ADC_res
+#get_adcvolt = lambda x: x*V_Max/2**DAC_res
 Gain = ADC_res/16
 
 #pwm init
@@ -67,57 +67,29 @@ class PI_Controller:
         
             
 
-    """Private functions in charge of hardware signal sending and collection"""
-    #function governing LED activation, DAC
-    def __LED(self):
-        print(f"LED activating at {self._now()}s...")
-        #no proto or proto 1
-        if not self._test[1]:
-            if self.counter == 2**DAC_res:
-                self.counter = 0
-            dac.raw_value = self.counter
-            self.counter += 2**DAC_res/16
-        else:
-            pass
-        pass
-
-    #function producing ramp signal to heat the u-chip, DAC
-    def __Temp(self):
-        print("Applying voltage to the Chip...")
-        pwm.duty_cycle = duty_cycle(99) #99% Duty cycle for DC voltage
-
-
-    #function reading the photodiode output , ADC    
-    def __PhotoDRead(self):
-        print("Photodiode reading start...")
-        chan0 = AnalogIn(adc,ADS.P0)
-        if not self._test[0]: #case signals
-            chan1 = AnalogIn(adc,ADS.P1)
-            print(f"Channel 0 ADC value: {round(chan0.value,3)}, voltage = {round(chan0.voltage,3)} V")
-            print(f"Channel 1 ADC value: {round(chan1.value,3)}, voltage = {round(chan1.voltage,3)} V")
-        else:
-            pass
-        pass    
-
-    def _now(self):
-        return round(time.time()-self.start_time,3) 
-        
-    #function storing initial T°=0 absorption throughport spectrum to compare with T°>0 spectrums 
-    def _Calibrate(self):
-        if not self._test[1]:
-            pass
-        else:
-            pass
-        pass
-
-    def _HW_start(self): #activate all hardware signals and readers
-        self._Calibrate()
-        while self.active:    #main parallel thread loop
-            self.__LED()
-            self.__Temp()
-            self.__PhotoDRead()
-            time.sleep(0.1)
     
+    #Streamlined ADC/DAC function to manipulate in/out voltages
+
+    def set_DAC(self,voltage): #set dac ouput voltage
+        try:
+            dac.raw_value = voltage/V_Max*2**DAC_res        
+        except:
+            print(f"DAC voltage output is between 0 and {V_Max} V")  
+    
+    def ADC_volt(self,channel = 0)->float: #return ADC voltage from selected channel
+        match channel:
+            case 0:
+                chan0 = AnalogIn(adc,ADS.P0)
+                return chan0.voltage
+            case 1:
+                chan1 = AnalogIn(adc,ADS.P1)
+                return chan1.voltage                  
+            case 2:
+                chan2 = AnalogIn(adc,ADS.P2)
+                return chan2.voltage                 
+            case 3:
+                chan3 = AnalogIn(adc,ADS.P3)
+                return chan3.voltage 
 
     def Run(self): #activate switch function , auto-start
         #if self.active:
@@ -139,6 +111,57 @@ class PI_Controller:
 
     def De_Activate(self):
         self.active = False
+
+    
+    """Private functions in charge of hardware signal sending and collection"""
+    #function governing LED activation, DAC
+    def __LED(self):
+        print(f"LED activating at {self._now()}s...")
+        #no proto or proto 1
+        if not self._test[1]:
+            if self.counter == 100:
+                self.counter = 0
+            dac.raw_value = self.counter
+            self.counter += 2**DAC_res/16
+        else:
+            pass
+        pass
+
+    #function producing ramp signal to heat the u-chip, DAC
+    def __Temp(self):
+        print("Applying voltage to the Chip...")
+        pwm.duty_cycle = duty_cycle(100) #100% Duty cycle for DC voltage
+
+
+    #function reading the photodiode output , ADC    
+    def __PhotoDRead(self):
+        print(f"Photodiode reading start t= {self._now()}s...")
+   
+        if not self._test[0]: #case signals
+            for i in range(4):
+                print(f"Channel {i} ADC voltage = {round(self.ADC_volt(i),3)} V")
+        else:
+            pass
+        pass    
+
+    def _now(self): #current time for performance tracking
+        return round(time.time()-self.start_time,3) 
+        
+    #function storing initial T°=0 absorption throughport spectrum to compare with T°>0 spectrums 
+    def _Calibrate(self):
+        if not self._test[1]:
+            pass
+        else:
+            pass
+        pass
+
+    def _HW_start(self): #activate all hardware signals and readers
+        self._Calibrate()
+        while self.active:    #main parallel thread loop
+            self.__LED()
+            self.__Temp()
+            self.__PhotoDRead()
+            time.sleep(0.1)    
 
 if __name__ == '__main__':
     test0 = PI_Controller(test_duration=1)
