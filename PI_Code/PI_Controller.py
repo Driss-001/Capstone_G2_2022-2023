@@ -74,7 +74,7 @@ class PI_Controller:
         try:
             dac.raw_value = voltage/V_Max*2**DAC_res        
         except:
-            print(f"DAC voltage output is between 0 and {V_Max} V")  
+            print(f"DAC voltage output must be between 0 and {V_Max} V")  
     
     def ADC_volt(self,channel = 0)->float: #return ADC voltage from selected channel
         match channel:
@@ -92,22 +92,24 @@ class PI_Controller:
                 return chan3.voltage 
 
     def Run(self): #activate switch function , auto-start
-        #if self.active:
+    
         #    #print("flag")
-        #    self.th1 = threading.Thread(target = self._HW_start)
-        #    self.th1.daemon = True
+        self.th1 = threading.Thread(target = self._HW_start)
+        self.th1.daemon = True
+        self.th1.start()
         self.counter = 0
         while self._now()<= 60*self.test_duration: 
-            self._HW_start()
+            pass
 
-        if self._now()>= 60*self.test_duration: #finish test
-            print(f"{self.test_duration} min have passed, test finished!")
-            self.De_Activate()
+         #finish test
+        print(f"{self.test_duration*60} secs have passed, test finished!")
+        self.Switch()
 
 
     def Switch(self): #toggle activate deactivate
         
         self.active = not self.active
+        print(f"active bool is now {self.active}")
 
     def De_Activate(self):
         self.active = False
@@ -121,8 +123,8 @@ class PI_Controller:
         if not self._test[1]:
             if self.counter == 100:
                 self.counter = 0
-            dac.raw_value = self.counter
-            self.counter += 2**DAC_res/16
+            self.set_DAC(self.counter/100*V_Max)
+            self.counter += 1
         else:
             pass
         pass
@@ -130,7 +132,7 @@ class PI_Controller:
     #function producing ramp signal to heat the u-chip, DAC
     def __Temp(self):
         print("Applying voltage to the Chip...")
-        pwm.duty_cycle = duty_cycle(100) #100% Duty cycle for DC voltage
+        pwm.duty_cycle = duty_cycle(99) #99% Duty cycle for DC voltage
 
 
     #function reading the photodiode output , ADC    
@@ -164,4 +166,4 @@ class PI_Controller:
             time.sleep(0.1)    
 
 if __name__ == '__main__':
-    test0 = PI_Controller(test_duration=1)
+    test0 = PI_Controller(test_duration=10/60)
