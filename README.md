@@ -11,3 +11,11 @@ Control System centered around Rpi-4
 
 ### Current Design Diagram
 ![](PostVisit_software.drawio.png)
+
+### Test0 Results
+
+Voltage Outputs<br>
+![ADC/DAC Graph](https://github.com/Driss-001/Capstone_G2_2022-2023/blob/main/Test0_ADC_DAC_output.png?raw=true)<br>
+
+Latency<br>
+![Latency](https://github.com/Driss-001/Capstone_G2_2022-2023/blob/main/Test0_Latency_output.png?raw=true)<br>
