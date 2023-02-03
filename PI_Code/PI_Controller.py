@@ -71,9 +71,9 @@ class PI_Controller:
     #Streamlined ADC/DAC function to manipulate in/out voltages
 
     def set_DAC(self,voltage): #set dac ouput voltage
-        dac.raw_value = voltage/V_Max*2**DAC_res 
+        dac.raw_value = round(voltage/V_Max*2**DAC_res) 
         try:
-            dac.raw_value = voltage/V_Max*2**DAC_res        
+            dac.raw_value = round(voltage/V_Max*2**DAC_res)        
         except:
             print(f"DAC voltage output must be between 0 and {V_Max} V")  
     
@@ -99,7 +99,7 @@ class PI_Controller:
         self.th1.daemon = True
         self.th1.start()
         self.counter = 10
-        
+
         while self._now()<= 60*self.test_duration: 
             pass
 
