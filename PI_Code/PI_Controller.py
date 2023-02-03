@@ -12,6 +12,7 @@ from scipy.integrate import simpson as sps
 import adafruit_mcp4725 as MCP
 import adafruit_ads1x15.ads1115 as ADS
 from adafruit_ads1x15.analog_in import AnalogIn
+import datetime as dt
 
 #constants
 path_length = 5 # in meters
@@ -109,6 +110,7 @@ class PI_Controller:
             pass
 
          #finish test
+        self._save_figs()
         print(f"{self.test_duration*60} secs have passed, test finished!")
         self.Switch()
 
@@ -173,9 +175,9 @@ class PI_Controller:
 
     def _HW_start(self): #activate all hardware signals and readers
         self._Calibrate()
+        self.__Temp()
         while self.active:    #main parallel thread loop
             self.__LED()
-            self.__Temp()
             self.__PhotoDRead()
             time.sleep(0.1)    
 
@@ -186,16 +188,17 @@ class PI_Controller:
         plt.legend(["DAC py-order","ADC chan0 output (DAC)","ADC chan 1 output(PWM"])
         plt.ylabel('Voltage (V)')
         plt.xlabel('time(s)')
-        plt.title("Rpi4 IO DAC/ADC Test0")
+        plt.title(f"Rpi4 IO DAC/ADC Test0,{dt.datetime.now()}")
         plt.savefig("Test0_ADC_DAC_output",dpi = 600)   
 
         plt.clf()
 
-        plt.plot(np.array(range(len(self.dac_order_time))),self.dac_order_time,c="blue")
-        plt.plot(np.array(range(len(self.adc_output_time))),self.dac_order_time,c="red")
+        plt.plot(np.array(range(1,len(self.dac_order_time)+1)),self.dac_order_time,c="blue")
+        plt.plot(np.array(range(1,len(self.adc_output_time)+1)),self.adc_output_time,c="red")
         plt.ylabel("time(s)")
         plt.title("Rpi4 IO Latency Test0")
-        plt.savefig("Test0_Latency_output",dpi = 600)   
+        plt.savefig("Test0_Latency_output",dpi = 600)
+        print("figure Saved!")   
 
 if __name__ == '__main__':
-    test0 = PI_Controller(test_duration=30/60)
+    test0 = PI_Controller(test_duration=50/60)
