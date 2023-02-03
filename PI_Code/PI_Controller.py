@@ -50,6 +50,11 @@ class PI_Controller:
         
         match self.test_status:
             case 0: #PI simple signals
+                self.dac_order = []
+                self.dac_order_time =[]
+                self.adc_output = []
+                self.adc_output_time = []
+                self.pwm_output = []
                 self._test = np.bool_([0,0]) #voltage test
                 ADS.mode = 0 # put ads in continuous mode for reading speed   
                 self.test_duration = test_duration  
@@ -127,9 +132,12 @@ class PI_Controller:
         if not self._test[1]:
             if self.counter == 100:
                 self.counter = 10
-            print(f"counter aues is: {self.counter}")    
-            self.set_DAC(self.counter/100*V_Max)
+            #print(f"counter aues is: {self.counter}")
+            dac_order = self.counter/100*V_Max    
+            self.set_DAC(dac_order)
             self.counter += 1
+            self.dac_order.append(dac_order)
+            self.dac_order_time.append(self._now())
         else:
             pass
         pass
@@ -145,8 +153,9 @@ class PI_Controller:
         print(f"Photodiode reading start t= {self._now()}s...")
    
         if not self._test[0]: #case signals
-            for i in range(4):
-                print(f"Channel {i} ADC voltage = {round(self.ADC_volt(i),3)} V")
+            self.adc_output.append(self.ADC_volt(0))
+            self.pwm_output.append(self.ADC_volt(1))
+            self.adc_output_time.append(self._now()) 
         else:
             pass
         pass    
@@ -169,6 +178,24 @@ class PI_Controller:
             self.__Temp()
             self.__PhotoDRead()
             time.sleep(0.1)    
+
+    def _save_figs(self):
+        plt.plot(self.dac_order_time,self.dac_order,c ="black")
+        plt.plot(self.adc_output_time,self.adc_output,c="red")
+        plt.plot(self.adc_output_time,self.pwm_output,c="green")
+        plt.legend(["DAC py-order","ADC chan0 output (DAC)","ADC chan 1 output(PWM"])
+        plt.ylabel('Voltage (V)')
+        plt.xlabel('time(s)')
+        plt.title("Rpi4 IO DAC/ADC Test0")
+        plt.savefig("Test0_ADC_DAC_output",dpi = 600)   
+
+        plt.clf()
+
+        plt.plot(np.array(range(len(self.dac_order_time))),self.dac_order_time,c="blue")
+        plt.plot(np.array(range(len(self.adc_output_time))),self.dac_order_time,c="red")
+        plt.ylabel("time(s)")
+        plt.title("Rpi4 IO Latency Test0")
+        plt.savefig("Test0_Latency_output",dpi = 600)   
 
 if __name__ == '__main__':
     test0 = PI_Controller(test_duration=30/60)
