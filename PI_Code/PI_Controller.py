@@ -32,7 +32,7 @@ dac = MCP.MCP4725(address=dac_address,i2c=i2c1)
 adc = ADS.ADS1115(address=adc_address,i2c = i2c2)
 #get_dacvolt  = lambda x: x*V_Max/2**ADC_res
 #get_adcvolt = lambda x: x*V_Max/2**DAC_res
-Gain = ADC_res/16
+Gain = ADC_res/16 #gain of 1
 
 #pwm init
 pwm = pwmio.PWMOut(board.D13,frequency = 10e3)
@@ -46,7 +46,7 @@ class PI_Controller:
         self.test_status = test 
         self.continuous = continuous #if reading loops itself
         self.active = True
-        self.start_time = time.time()
+        self.Reset_time()
         
         match self.test_status:
             case 0: #PI simple signals
@@ -71,6 +71,7 @@ class PI_Controller:
     #Streamlined ADC/DAC function to manipulate in/out voltages
 
     def set_DAC(self,voltage): #set dac ouput voltage
+        dac.raw_value = voltage/V_Max*2**DAC_res 
         try:
             dac.raw_value = voltage/V_Max*2**DAC_res        
         except:
@@ -97,7 +98,8 @@ class PI_Controller:
         self.th1 = threading.Thread(target = self._HW_start)
         self.th1.daemon = True
         self.th1.start()
-        self.counter = 0
+        self.counter = 10
+        
         while self._now()<= 60*self.test_duration: 
             pass
 
@@ -114,7 +116,9 @@ class PI_Controller:
     def De_Activate(self):
         self.active = False
 
-    
+    def Reset_time(self):
+        self.start_time = time.time()
+
     """Private functions in charge of hardware signal sending and collection"""
     #function governing LED activation, DAC
     def __LED(self):
@@ -122,7 +126,8 @@ class PI_Controller:
         #no proto or proto 1
         if not self._test[1]:
             if self.counter == 100:
-                self.counter = 0
+                self.counter = 10
+            print(f"counter aues is: {self.counter}")    
             self.set_DAC(self.counter/100*V_Max)
             self.counter += 1
         else:
@@ -166,4 +171,4 @@ class PI_Controller:
             time.sleep(0.1)    
 
 if __name__ == '__main__':
-    test0 = PI_Controller(test_duration=10/60)
+    test0 = PI_Controller(test_duration=30/60)
