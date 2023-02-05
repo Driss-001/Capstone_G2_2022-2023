@@ -36,17 +36,18 @@ adc = ADS.ADS1115(address=adc_address,i2c = i2c2)
 Gain = ADC_res/16 #gain of 1
 
 #pwm init
-pwm = pwmio.PWMOut(board.D13,frequency = 10e3)
+pwm = pwmio.PWMOut(board.D13,frequency = 10e4)
 duty_cycle = lambda x: 2**16/100*x #Duty cycle is 16bits, return duty cycle percentage
 
 class PI_Controller:
     """Raspberry pi code to activate the (S)LED, heat the u-chip and collect signal from the photodiode"""
     
     #Initialisation
-    def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0) -> None:
+    def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300) -> None:
         self.test_status = test 
         self.continuous = continuous #if reading loops itself
         self.active = True
+        self.dpi = dpi
         self.Reset_time()
         
         match self.test_status:
@@ -77,7 +78,8 @@ class PI_Controller:
     #Streamlined ADC/DAC function to manipulate in/out voltages
 
     def set_DAC(self,voltage): #set dac ouput voltage
-        dac.raw_value = round(voltage/V_Max*2**DAC_res) 
+        if voltage > V_Max:
+            voltage = V_Max
         try:
             dac.raw_value = round(voltage/V_Max*2**DAC_res)        
         except:
@@ -104,7 +106,7 @@ class PI_Controller:
         self.th1 = threading.Thread(target = self._HW_start)
         self.th1.daemon = True
         self.th1.start()
-        self.counter = 10
+        self.counter = 0
 
         while self._now()<= 60*self.test_duration: 
             pass
@@ -133,9 +135,9 @@ class PI_Controller:
         #no proto or proto 1
         if not self._test[1]:
             if self.counter == 100:
-                self.counter = 10
+                self.counter = 0
             #print(f"counter aues is: {self.counter}")
-            dac_order = self.counter/100*V_Max    
+            dac_order = abs(mt.sin(2*mt.pi*self._now()/(60*self.test_duration*1.1)))*V_Max    
             self.set_DAC(dac_order)
             self.counter += 1
             self.dac_order.append(dac_order)
@@ -185,13 +187,13 @@ class PI_Controller:
     def _save_figs(self):
         if not self._test[1]:
             plt.plot(self.dac_order_time,self.dac_order,c ="black")
-            plt.plot(self.adc_output_time,self.adc_output,c="red")
-            plt.plot(self.adc_output_time,self.pwm_output,c="green")
+            plt.scatter(self.adc_output_time,self.adc_output,c="red")
+            plt.scatter(self.adc_output_time,self.pwm_output,c="green")
             plt.legend(["DAC py-order","ADC chan0 output (DAC)","ADC chan 1 output(PWM)"])
             plt.ylabel('Voltage (V)')
             plt.xlabel('time(s)')
             plt.title(f"Rpi4 IO DAC/ADC Test0,{dt.datetime.now()}")
-            plt.savefig("Test0_ADC_DAC_output",dpi = 600)   
+            plt.savefig("Test0_ADC_DAC_output",dpi = self.dpi)   
 
             plt.clf()
 
@@ -200,8 +202,8 @@ class PI_Controller:
             plt.legend(["DAC order time","ADC output time"])
             plt.ylabel("time(s)")
             plt.title("Rpi4 IO Latency Test0")
-            plt.savefig("Test0_Latency_output",dpi = 600)
+            plt.savefig("Test0_Latency_output",dpi = self.dpi)
         print("figure Saved!")   
 
 if __name__ == '__main__':
-    test0 = PI_Controller(test_duration=50/60)
+    test0 = PI_Controller(test_duration=30/60)
