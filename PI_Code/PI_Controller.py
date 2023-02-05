@@ -181,24 +181,26 @@ class PI_Controller:
             self.__PhotoDRead()
             time.sleep(0.1)    
 
+    """Private functions for data handling"""
     def _save_figs(self):
-        plt.plot(self.dac_order_time,self.dac_order,c ="black")
-        plt.plot(self.adc_output_time,self.adc_output,c="red")
-        plt.plot(self.adc_output_time,self.pwm_output,c="green")
-        plt.legend(["DAC py-order","ADC chan0 output (DAC)","ADC chan 1 output(PWM)"])
-        plt.ylabel('Voltage (V)')
-        plt.xlabel('time(s)')
-        plt.title(f"Rpi4 IO DAC/ADC Test0,{dt.datetime.now()}")
-        plt.savefig("Test0_ADC_DAC_output",dpi = 600)   
+        if not self._test[1]:
+            plt.plot(self.dac_order_time,self.dac_order,c ="black")
+            plt.plot(self.adc_output_time,self.adc_output,c="red")
+            plt.plot(self.adc_output_time,self.pwm_output,c="green")
+            plt.legend(["DAC py-order","ADC chan0 output (DAC)","ADC chan 1 output(PWM)"])
+            plt.ylabel('Voltage (V)')
+            plt.xlabel('time(s)')
+            plt.title(f"Rpi4 IO DAC/ADC Test0,{dt.datetime.now()}")
+            plt.savefig("Test0_ADC_DAC_output",dpi = 600)   
 
-        plt.clf()
+            plt.clf()
 
-        plt.plot(np.array(range(1,len(self.dac_order_time)+1)),self.dac_order_time,c="blue")
-        plt.plot(np.array(range(1,len(self.adc_output_time)+1)),self.adc_output_time,c="red")
-        plt.legend(["DAC order time","ADC output time"])
-        plt.ylabel("time(s)")
-        plt.title("Rpi4 IO Latency Test0")
-        plt.savefig("Test0_Latency_output",dpi = 600)
+            plt.plot(np.array(range(1,len(self.dac_order_time)+1)),self.dac_order_time,c="blue")
+            plt.plot(np.array(range(1,len(self.adc_output_time)+1)),self.adc_output_time,c="red")
+            plt.legend(["DAC order time","ADC output time"])
+            plt.ylabel("time(s)")
+            plt.title("Rpi4 IO Latency Test0")
+            plt.savefig("Test0_Latency_output",dpi = 600)
         print("figure Saved!")   
 
 if __name__ == '__main__':
