@@ -36,7 +36,7 @@ adc = ADS.ADS1115(address=adc_address,i2c = i2c2)
 Gain = ADC_res/16 #gain of 1
 
 #pwm init
-pwm = pwmio.PWMOut(board.D13,frequency = 10e4)
+pwm = pwmio.PWMOut(board.D13,frequency = 50e3,variable_frequency = True)
 duty_cycle = lambda x: 2**16/100*x #Duty cycle is 16bits, return duty cycle percentage
 
 class PI_Controller:
@@ -197,12 +197,12 @@ class PI_Controller:
 
             plt.clf()
 
-            plt.plot(np.array(range(1,len(self.dac_order_time)+1)),self.dac_order_time,c="blue")
-            plt.plot(np.array(range(1,len(self.adc_output_time)+1)),self.adc_output_time,c="red")
-            plt.legend(["DAC order time","ADC output time"])
-            plt.ylabel("time(s)")
-            plt.title("Rpi4 IO Latency Test0")
-            plt.savefig("Test0_Latency_output",dpi = self.dpi)
+            #plt.plot(np.array(range(1,len(self.dac_order_time)+1)),self.dac_order_time,c="blue")
+            #plt.plot(np.array(range(1,len(self.adc_output_time)+1)),self.adc_output_time,c="red")
+            #plt.legend(["DAC order time","ADC output time"])
+            #plt.ylabel("time(s)")
+            #plt.title("Rpi4 IO Latency Test0")
+            #plt.savefig("Test0_Latency_output",dpi = self.dpi)
         print("figure Saved!")   
 
 if __name__ == '__main__':
