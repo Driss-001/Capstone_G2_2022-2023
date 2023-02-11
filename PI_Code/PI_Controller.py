@@ -226,7 +226,7 @@ class PI_Controller:
             plt.ylabel('Voltage (V)')
             plt.xlabel('time(s)')
             plt.title(f"Rpi4 IO DAC/ADC Test1,sampling @ {self.sampling_f/1000}kHz,date:{dt.datetime.now()}")
-            plt.savefig(f"Test1_ADC_output_{self.sampling_f/1000}_{dt.datetime.now().strftime('%Y-%m-%d-%H-%M')}.png",dpi = self.dpi)
+            plt.savefig(f"Test1_ADC_output_{int(round(self.sampling_f/1000))}_{dt.datetime.now().strftime('%Y-%m-%d-%H-%M')}.png",dpi = self.dpi)
             plt.clf()   
 
         print("figure Saved!")   
