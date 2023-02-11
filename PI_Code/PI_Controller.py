@@ -36,19 +36,21 @@ adc = ADS.ADS1115(address=adc_address,i2c = i2c2)
 Gain = ADC_res/16 #gain of 1
 
 #pwm init
-pwm = pwmio.PWMOut(board.D13,frequency = 50e3,variable_frequency = True)
+pwm = pwmio.PWMOut(board.D13,frequency = 200e3,variable_frequency = True)
 duty_cycle = lambda x: 2**16/100*x #Duty cycle is 16bits, return duty cycle percentage
 
 class PI_Controller:
     """Raspberry pi code to activate the (S)LED, heat the u-chip and collect signal from the photodiode"""
     
     #Initialisation
-    def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300) -> None:
+    def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300,sampling_f = 1000) -> None:
         self.test_status = test 
         self.continuous = continuous #if reading loops itself
         self.active = True
         self.dpi = dpi
         self.Reset_time()
+        self.counter = 0
+        self.sampling_f = sampling_f
         
         match self.test_status:
             case 0: #PI simple signals
@@ -59,14 +61,17 @@ class PI_Controller:
                 self.pwm_output = []
                 self._test = np.bool_([0,0]) #voltage test
                 ADS.mode = 0 # put ads in continuous mode for reading speed   
-                self.test_duration = test_duration  
+                self.test_duration = test_duration*60  
                 self.Run() #switch on
             case 1: #Proto 1
-                self._test = np.bool_([0,1]) 
+                self.adc_output = []
+                self.adc_output_time = []                
+                self._test = np.bool_([1,0]) 
                 self.time = time.time()
                 self.test_duration = test_duration*60 #duration in sec
+                self.Run() #switch on
             case 2: #Proto 2
-                self._test = np.bool_([1,0])  #signal test
+                self._test = np.bool_([0,1])  #signal test
                 self.time = time.time()
                 self.test_duration = test_duration*60 #duration in sec   
             case 3: #Real case
@@ -108,13 +113,16 @@ class PI_Controller:
         self.th1.start()
         self.counter = 0
 
-        while self._now()<= 60*self.test_duration: 
+        while self._now()<= self.test_duration: #wait for test to finish
             pass
 
          #finish test
         self._save_figs()
-        print(f"{self.test_duration*60} secs have passed, test finished!")
+        print(f"{self.test_duration} secs have passed, test finished!")
         self.Switch()
+        if not self.active:
+            self.th1.join()        
+    
 
 
     def Switch(self): #toggle activate deactivate
@@ -133,7 +141,7 @@ class PI_Controller:
     def __LED(self):
         print(f"LED activating at {self._now()}s...")
         #no proto or proto 1
-        if not self._test[1]:
+        if not self._test[1] and not self._test[0]:
             if self.counter == 100:
                 self.counter = 0
             #print(f"counter aues is: {self.counter}")
@@ -142,7 +150,8 @@ class PI_Controller:
             self.counter += 1
             self.dac_order.append(dac_order)
             self.dac_order_time.append(self._now())
-        else:
+            return
+        if not self._test[1] and  self._test[0]:
             pass
         pass
 
@@ -156,12 +165,14 @@ class PI_Controller:
     def __PhotoDRead(self):
         print(f"Photodiode reading start t= {self._now()}s...")
    
-        if not self._test[0]: #case signals
+        if not self._test[1] and not self._test[0]: #case signals
             self.adc_output.append(self.ADC_volt(0))
             self.pwm_output.append(self.ADC_volt(1))
-            self.adc_output_time.append(self._now()) 
-        else:
-            pass
+            self.adc_output_time.append(self._now())
+            return 
+        if not self._test[1] and  self._test[0]:
+            self.adc_output.append(self.ADC_volt(1))
+            self.adc_output_time.append(self._now())
         pass    
 
     def _now(self): #current time for performance tracking
@@ -169,7 +180,7 @@ class PI_Controller:
         
     #function storing initial T°=0 absorption throughport spectrum to compare with T°>0 spectrums 
     def _Calibrate(self):
-        if not self._test[1]:
+        if not self._test[1] and not self._test[0]:
             pass
         else:
             pass
@@ -181,18 +192,23 @@ class PI_Controller:
         while self.active:    #main parallel thread loop
             self.__LED()
             self.__PhotoDRead()
-            time.sleep(0.1)    
+            time.sleep(1/self.sampling_f) #100us intervall  
+
+    def _progbar(self):
+        bar_length = 100
+        pass
+
 
     """Private functions for data handling"""
     def _save_figs(self):
-        if not self._test[1]:
+        if not self._test[1] and not self._test[0]:
             plt.plot(self.dac_order_time,self.dac_order,c ="black")
             plt.scatter(self.adc_output_time,self.adc_output,c="red")
             plt.scatter(self.adc_output_time,self.pwm_output,c="green")
             plt.legend(["DAC py-order","ADC chan0 output (DAC)","ADC chan 1 output(PWM)"])
             plt.ylabel('Voltage (V)')
             plt.xlabel('time(s)')
-            plt.title(f"Rpi4 IO DAC/ADC Test0,{dt.datetime.now()}")
+            plt.title(f"Rpi4 IO DAC/ADC Test0,sampling @ {self.sampling_f}Hz,date:{dt.datetime.now()}")
             plt.savefig("Test0_ADC_DAC_output",dpi = self.dpi)   
 
             plt.clf()
@@ -203,7 +219,18 @@ class PI_Controller:
             #plt.ylabel("time(s)")
             #plt.title("Rpi4 IO Latency Test0")
             #plt.savefig("Test0_Latency_output",dpi = self.dpi)
+            return
+        if not self._test[1] and  self._test[0]:  
+            plt.plot(self.adc_output_time,self.adc_output,c="red")
+            plt.legend(["ADC chan1 output  (Photodiode)"])    
+            plt.ylabel('Voltage (V)')
+            plt.xlabel('time(s)')
+            plt.title(f"Rpi4 IO DAC/ADC Test1,ampling @ {self.sampling_f}Hz,date:{dt.datetime.now()}")
+            plt.savefig(f"Test1_ADC_output_{self.sampling_f/1000}_{dt.datetime.now()}.png",dpi = self.dpi)
+            plt.clf()   
+
         print("figure Saved!")   
 
 if __name__ == '__main__':
-    test0 = PI_Controller(test_duration=30/60)
+    #test0 = PI_Controller(test_duration=20/60)
+    test1 = PI_Controller(test_duration=10/60,test =1,sampling_f = 1e5)
