@@ -225,7 +225,7 @@ class PI_Controller:
             plt.legend(["ADC chan1 output  (Photodiode)"])    
             plt.ylabel('Voltage (V)')
             plt.xlabel('time(s)')
-            plt.title(f"Rpi4 IO DAC/ADC Test1,ampling @ {self.sampling_f}Hz,date:{dt.datetime.now()}")
+            plt.title(f"Rpi4 IO DAC/ADC Test1,sampling @ {self.sampling_f/1000}kHz,date:{dt.datetime.now()}")
             plt.savefig(f"Test1_ADC_output_{self.sampling_f/1000}_{dt.datetime.now()}.png",dpi = self.dpi)
             plt.clf()   
 
@@ -233,4 +233,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test_duration=10/60,test =1,sampling_f = 1e5)
+    test1 = PI_Controller(test_duration=100/60,test =1,sampling_f = 1e5)
