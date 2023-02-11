@@ -19,3 +19,10 @@ Voltage Outputs<br>
 
 Latency<br>
 ![Latency](https://github.com/Driss-001/Capstone_G2_2022-2023/blob/main/Test0_Latency_output.png?raw=true)<br>
+
+### Test0 Results
+
+No ramp<br>
+
+![T°=0 graph](https://github.com/Driss-001/Capstone_G2_2022-2023/blob/main/Test1_ADC_output_100_2023-02-10 22_17_57.png?raw=true)<br>
+![T° ramp graph](https://github.com/Driss-001/Capstone_G2_2022-2023/blob/main/Test1_ADC_output_100_2023-02-10 22_20_09.png?raw=true)<br>
