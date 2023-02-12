@@ -221,11 +221,11 @@ class PI_Controller:
             #plt.savefig("Test0_Latency_output",dpi = self.dpi)
             return
         if not self._test[1] and  self._test[0]:  
-            plt.plot(self.adc_output_time,self.adc_output,c="red")
+            plt.plot(self.adc_output_time,self.adc_output,c="blue")
             plt.legend(["ADC chan1 output  (Photodiode)"])    
             plt.ylabel('Voltage (V)')
             plt.xlabel('time(s)')
-            plt.title(f"Rpi4 IO DAC/ADC Test1,sampling @ {self.sampling_f/1000}kHz,date:{dt.datetime.now()}")
+            plt.title(f"Rpi4 IO DAC/ADC Test1,sampling @ {self.sampling_f/1000}kHz,date:{dt.datetime.now().strftime('%Y-%m-%d-%H-%M')}")
             plt.savefig(f"Test1_ADC_output_{int(round(self.sampling_f/1000))}_{dt.datetime.now().strftime('%Y-%m-%d-%H-%M')}.png",dpi = self.dpi)
             plt.clf()   
 
