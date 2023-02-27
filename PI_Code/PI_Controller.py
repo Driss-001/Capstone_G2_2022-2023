@@ -30,7 +30,7 @@ i2c1 = I2C(1)
 i2c2 = I2C(6)
 
 dac = MCP.MCP4725(address=dac_address,i2c=i2c1)
-adc = ADS.ADS1115(address=adc_address,i2c = i2c2)
+adc = ADS.ADS1115(address=adc_address,i2c = i2c2,data_rate=860)
 #get_dacvolt  = lambda x: x*V_Max/2**ADC_res
 #get_adcvolt = lambda x: x*V_Max/2**DAC_res
 Gain = ADC_res/16 #gain of 1
@@ -39,11 +39,20 @@ Gain = ADC_res/16 #gain of 1
 pwm = pwmio.PWMOut(board.D13,frequency = 200e3,variable_frequency = True)
 duty_cycle = lambda x: 2**16/100*x #Duty cycle is 16bits, return duty cycle percentage
 
+#Triangle ramp signal/correlations wanted
+
+corr_num = 2
+
 class PI_Controller:
-    """Raspberry pi code to activate the (S)LED, heat the u-chip and collect signal from the photodiode"""
+    """Raspberry pi code to activate the (S)LED, heat the u-chip and collect signal from the photodiode
+       input: test #(0,1) currently supported, continuous 0, test duration: wanted test duration in sec
+                dpi for graphical output, sampling_f sampling frequency 
+    
+    
+    """
     
     #Initialisation
-    def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300,sampling_f = 1000) -> None:
+    def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300,sampling_f = 200) -> None:
         self.test_status = test 
         self.continuous = continuous #if reading loops itself
         self.active = True
@@ -51,6 +60,10 @@ class PI_Controller:
         self.Reset_time()
         self.counter = 0
         self.sampling_f = sampling_f
+        if self.sampling_f >=860:
+            self.sampling_f = 860
+        self.num_samples = self.sampling_f*test_duration
+        self.t_period =  self.test_duration/corr_num    
         
         match self.test_status:
             case 0: #PI simple signals
@@ -61,19 +74,19 @@ class PI_Controller:
                 self.pwm_output = []
                 self._test = np.bool_([0,0]) #voltage test
                 ADS.mode = 0 # put ads in continuous mode for reading speed   
-                self.test_duration = test_duration*60  
+                self.test_duration = test_duration
                 self.Run() #switch on
             case 1: #Proto 1
                 self.adc_output = []
                 self.adc_output_time = []                
                 self._test = np.bool_([1,0]) 
                 self.time = time.time()
-                self.test_duration = test_duration*60 #duration in sec
+                self.test_duration = test_duration #duration in sec
                 self.Run() #switch on
             case 2: #Proto 2
                 self._test = np.bool_([0,1])  #signal test
                 self.time = time.time()
-                self.test_duration = test_duration*60 #duration in sec   
+                self.test_duration = test_duration #duration in sec   
             case 3: #Real case
                 self._test = np.bool_([1,1]) 
         
@@ -113,7 +126,7 @@ class PI_Controller:
         self.th1.start()
         self.counter = 0
 
-        while self._now()<= self.test_duration: #wait for test to finish
+        while self._now()<= self.test_duration: #finish signal by points collected
             pass
 
          #finish test
@@ -139,11 +152,9 @@ class PI_Controller:
     """Private functions in charge of hardware signal sending and collection"""
     #function governing LED activation, DAC
     def __LED(self):
-        print(f"LED activating at {self._now()}s...")
         #no proto or proto 1
         if not self._test[1] and not self._test[0]:
-            if self.counter == 100:
-                self.counter = 0
+            
             #print(f"counter aues is: {self.counter}")
             dac_order = abs(mt.sin(2*mt.pi*self._now()/(60*self.test_duration*1.1)))*V_Max    
             self.set_DAC(dac_order)
@@ -163,7 +174,6 @@ class PI_Controller:
 
     #function reading the photodiode output , ADC    
     def __PhotoDRead(self):
-        print(f"Photodiode reading start t= {self._now()}s...")
    
         if not self._test[1] and not self._test[0]: #case signals
             self.adc_output.append(self.ADC_volt(0))
@@ -175,6 +185,7 @@ class PI_Controller:
             self.adc_output_time.append(self._now())
         pass    
 
+        self.counter = len(self.adc_output) #recorded DAC output length
     def _now(self): #current time for performance tracking
         return round(time.time()-self.start_time,3) 
         
@@ -192,19 +203,30 @@ class PI_Controller:
         while self.active:    #main parallel thread loop
             self.__LED()
             self.__PhotoDRead()
-            time.sleep(1/self.sampling_f) #100us intervall  
+            time.sleep(1/self.sampling_f-1/860) #adjust to sampling frequency + 860Hz round for DAC conversion
 
     def _progbar(self):
         bar_length = 100
         pass
 
+    #triangular signal function for PWM-DC system    
+    def _triangle(self,period,peak):
+        now_time = self.now()
+        now_mode = now_time // period
+        if now_mode%2 == 0:
+            return now_time*peak*2/period
+        else:
+            return peak(1-now_time*2/period)
+
 
     """Private functions for data handling"""
+   
     def _save_figs(self):
+        n = self.num_samples
         if not self._test[1] and not self._test[0]:
-            plt.plot(self.dac_order_time,self.dac_order,c ="black")
-            plt.scatter(self.adc_output_time,self.adc_output,c="red")
-            plt.scatter(self.adc_output_time,self.pwm_output,c="green")
+            plt.plot(self.dac_order_time[0:n],self.dac_order[0:n],c ="black")
+            plt.scatter(self.adc_output_time[0:n],self.adc_output[0:n],c="red")
+            plt.scatter(self.adc_output_time[0:n],self.pwm_output[0:n],c="green")
             plt.legend(["DAC py-order","ADC chan0 output (DAC)","ADC chan 1 output(PWM)"])
             plt.ylabel('Voltage (V)')
             plt.xlabel('time(s)')
