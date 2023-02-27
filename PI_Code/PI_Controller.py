@@ -126,7 +126,7 @@ class PI_Controller:
         self.th1.start()
         self.counter = 0
 
-        while self._now()<= self.test_duration: #finish signal by points collected
+        while self.counter< self.num_samples: #finish signal by points collected
             pass
 
          #finish test
@@ -230,7 +230,7 @@ class PI_Controller:
             plt.legend(["DAC py-order","ADC chan0 output (DAC)","ADC chan 1 output(PWM)"])
             plt.ylabel('Voltage (V)')
             plt.xlabel('time(s)')
-            plt.title(f"Rpi4 IO DAC/ADC Test0,sampling @ {self.sampling_f}Hz,date:{dt.datetime.now()}")
+            plt.title(f"Rpi4 IO DAC/ADC Test0,sampling @ {self.sampling_f}Hz,date:{dt.datetime.now().strftime('%Y-%m-%d-%H-%M')}")
             plt.savefig("Test0_ADC_DAC_output",dpi = self.dpi)   
 
             plt.clf()
@@ -247,12 +247,12 @@ class PI_Controller:
             plt.legend(["ADC chan1 output  (Photodiode)"])    
             plt.ylabel('Voltage (V)')
             plt.xlabel('time(s)')
-            plt.title(f"Rpi4 IO DAC/ADC Test1,sampling @ {self.sampling_f/1000}kHz,date:{dt.datetime.now().strftime('%Y-%m-%d-%H-%M')}")
-            plt.savefig(f"Test1_ADC_output_{int(round(self.sampling_f/1000))}_{dt.datetime.now().strftime('%Y-%m-%d-%H-%M')}.png",dpi = self.dpi)
+            plt.title(f"Rpi4 IO DAC/ADC Test1,sampling @ {self.sampling_f}Hz,{self.num_samples} points,date:{dt.datetime.now().strftime('%Y-%m-%d-%H-%M')}")
+            plt.savefig(f"Test1_ADC_output_{int(round(self.sampling_f))}_{self.num_samples}_{dt.datetime.now().strftime('%Y-%m-%d-%H-%M')}.png",dpi = self.dpi)
             plt.clf()   
 
         print("figure Saved!")   
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test_duration=100/60,test =1,sampling_f = 1e5)
+    test1 = PI_Controller(test =1,sampling_f=400)
