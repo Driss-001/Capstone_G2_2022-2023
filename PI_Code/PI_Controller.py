@@ -122,12 +122,13 @@ class PI_Controller:
     def Run(self): #activate switch function , auto-start
     
         #    #print("flag")
+        t_start = self._now()
         self.th1 = threading.Thread(target = self._HW_start)
         self.th1.daemon = True
         self.th1.start()
         self.counter = 0
         perc_1=0
-        t_start = self._now()
+        
         
         while self.counter< self.num_samples: #finish signal by points collected
             perc_2 = self.counter/self.num_samples*100
@@ -138,7 +139,7 @@ class PI_Controller:
 
          #finish test
         self._save_figs()
-        print(f"{self.test_duration} secs have passed, test finished!")
+        print(f"{self._now(t_start)} secs have passed, test finished!")
         self.Switch()
         if not self.active:
             self.th1.join()        
@@ -211,7 +212,7 @@ class PI_Controller:
         while self.active:    #main parallel thread loop
             self.__LED()
             self.__PhotoDRead()
-            time.sleep(1/self.sampling_f-1/860) #adjust to sampling frequency + 860Hz round for DAC conversion
+            #time.sleep(1/self.sampling_f-1/860) #adjust to sampling frequency + 860Hz round for DAC conversion
 
     def _progbar(self):
         bar_length = 100
@@ -263,4 +264,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =0,test_duration = 1,sampling_f=860)
+    test1 = PI_Controller(test =1,test_duration =20,sampling_f=44)
