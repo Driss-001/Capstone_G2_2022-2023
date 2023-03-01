@@ -163,7 +163,7 @@ class PI_Controller:
         if not self._test[1] and not self._test[0]:
             
             #print(f"counter aues is: {self.counter}")
-            dac_order =self._triangle(self.period,V_Max)     
+            dac_order =self._triangle(self.t_period,V_Max)     
             self.set_DAC(dac_order)
             self.counter += 1
             self.dac_order.append(dac_order)
@@ -263,4 +263,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =0,sampling_f=400)
+    test1 = PI_Controller(test =0,test_duration = 1,sampling_f=860)
