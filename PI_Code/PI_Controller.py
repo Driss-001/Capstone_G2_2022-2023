@@ -18,7 +18,7 @@ import datetime as dt
 path_length = 5 # in meters
 DAC_res =  12
 ADC_res =  16
-V_Max = 3.3 #max gpio output voltage
+V_Max = 5 #max gpio output voltage
 
 #constant functions
 dac_raw = lambda volt: volt/V_Max*2**DAC_res
@@ -55,6 +55,7 @@ class PI_Controller:
     def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300,sampling_f = 200) -> None:
         self.test_status = test 
         self.continuous = continuous #if reading loops itself
+        self.test_duration = test_duration           
         self.active = True
         self.dpi = dpi
         self.Reset_time()
@@ -63,7 +64,8 @@ class PI_Controller:
         if self.sampling_f >=860:
             self.sampling_f = 860
         self.num_samples = self.sampling_f*test_duration
-        self.t_period =  self.test_duration/corr_num    
+        self.t_period =  self.test_duration/corr_num
+ 
         
         match self.test_status:
             case 0: #PI simple signals
@@ -73,20 +75,19 @@ class PI_Controller:
                 self.adc_output_time = []
                 self.pwm_output = []
                 self._test = np.bool_([0,0]) #voltage test
-                ADS.mode = 0 # put ads in continuous mode for reading speed   
-                self.test_duration = test_duration
+                ADS.mode = 0 # put ads in continuous mode for reading speed  
                 self.Run() #switch on
             case 1: #Proto 1
                 self.adc_output = []
                 self.adc_output_time = []                
                 self._test = np.bool_([1,0]) 
                 self.time = time.time()
-                self.test_duration = test_duration #duration in sec
+            
                 self.Run() #switch on
             case 2: #Proto 2
                 self._test = np.bool_([0,1])  #signal test
                 self.time = time.time()
-                self.test_duration = test_duration #duration in sec   
+         
             case 3: #Real case
                 self._test = np.bool_([1,1]) 
         
@@ -125,9 +126,15 @@ class PI_Controller:
         self.th1.daemon = True
         self.th1.start()
         self.counter = 0
-
+        perc_1=0
+        t_start = self._now()
+        
         while self.counter< self.num_samples: #finish signal by points collected
-            pass
+            perc_2 = self.counter/self.num_samples*100
+            if abs(perc_2-perc_1)>10:
+                print(perc_2,self.counter/self._now(t_start))
+                perc_1 = perc_2
+
 
          #finish test
         self._save_figs()
@@ -186,8 +193,9 @@ class PI_Controller:
         pass    
 
         self.counter = len(self.adc_output) #recorded DAC output length
-    def _now(self): #current time for performance tracking
-        return round(time.time()-self.start_time,3) 
+
+    def _now(self,t=0): #current time for performance tracking
+        return round(time.time()-self.start_time-t,3) 
         
     #function storing initial T°=0 absorption throughport spectrum to compare with T°>0 spectrums 
     def _Calibrate(self):
@@ -216,7 +224,7 @@ class PI_Controller:
         if now_mode%2 == 0:
             return now_time*peak*2/period
         else:
-            return peak(1-now_time*2/period)
+            return peak*(1-now_time*2/period)
 
 
     """Private functions for data handling"""
@@ -255,4 +263,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,sampling_f=400)
+    test1 = PI_Controller(test =0,sampling_f=400)
