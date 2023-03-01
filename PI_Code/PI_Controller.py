@@ -18,7 +18,7 @@ import datetime as dt
 path_length = 5 # in meters
 DAC_res =  12
 ADC_res =  16
-V_Max = 5 #max gpio output voltage
+V_Max = 5.0 #max gpio output voltage
 
 #constant functions
 dac_raw = lambda volt: volt/V_Max*2**DAC_res
@@ -163,7 +163,7 @@ class PI_Controller:
         if not self._test[1] and not self._test[0]:
             
             #print(f"counter aues is: {self.counter}")
-            dac_order = abs(mt.sin(2*mt.pi*self._now()/(60*self.test_duration*1.1)))*V_Max    
+            dac_order =self._triangle(self.period,V_Max)     
             self.set_DAC(dac_order)
             self.counter += 1
             self.dac_order.append(dac_order)
@@ -220,12 +220,12 @@ class PI_Controller:
     #triangular signal function for PWM-DC system    
     def _triangle(self,period,peak):
         now_time = self.now()
-        now_mode = now_time // period
-        if now_mode%2 == 0:
-            return now_time*peak*2/period
+        now_frac = now_time//(period/2)
+        now_mod = now_frac%2
+        if now_mod == 0:
+            return peak*2/period*(now_time-period/2*now_frac)
         else:
-            return peak*(1-now_time*2/period)
-
+            return peak*(1-2/period*(now_time-period/2*now_frac)) 
 
     """Private functions for data handling"""
    
