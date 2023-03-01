@@ -219,7 +219,7 @@ class PI_Controller:
 
     #triangular signal function for PWM-DC system    
     def _triangle(self,period,peak):
-        now_time = self.now()
+        now_time = self._now()
         now_frac = now_time//(period/2)
         now_mod = now_frac%2
         if now_mod == 0:
