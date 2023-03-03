@@ -18,7 +18,7 @@ import datetime as dt
 path_length = 5 # in meters
 DAC_res =  12
 ADC_res =  16
-V_Max = 5.0 #max gpio output voltage
+V_Max = 3.3 #max gpio output voltage
 
 #constant functions
 dac_raw = lambda volt: volt/V_Max*2**DAC_res
@@ -36,7 +36,7 @@ adc = ADS.ADS1115(address=adc_address,i2c = i2c2,data_rate=860)
 Gain = ADC_res/16 #gain of 1
 
 #pwm init
-pwm = pwmio.PWMOut(board.D13,frequency = 200e3,variable_frequency = True)
+pwm = pwmio.PWMOut(board.D13,frequency = 1e3,variable_frequency = True)
 duty_cycle = lambda x: (2**16-1)/100*x #Duty cycle is 16bits, return duty cycle percentage
 
 #Triangle ramp signal/correlations wanted
@@ -189,7 +189,7 @@ class PI_Controller:
             self.adc_output_time.append(self._now())
             return 
         if not self._test[1] and  self._test[0]:
-            self.adc_output.append(self.ADC_volt(1))
+            self.adc_output.append(self.ADC_volt(2))
             self.adc_output_time.append(self._now())
         pass    
 
@@ -264,4 +264,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =20,sampling_f=44)
+    test1 = PI_Controller(test =1,test_duration =5,sampling_f=100)
