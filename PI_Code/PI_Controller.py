@@ -37,7 +37,7 @@ Gain = ADC_res/16 #gain of 1
 
 #pwm init
 pwm = pwmio.PWMOut(board.D13,frequency = 200e3,variable_frequency = True)
-duty_cycle = lambda x: 2**16/100*x #Duty cycle is 16bits, return duty cycle percentage
+duty_cycle = lambda x: (2**16-1)/100*x #Duty cycle is 16bits, return duty cycle percentage
 
 #Triangle ramp signal/correlations wanted
 
@@ -100,7 +100,7 @@ class PI_Controller:
         if voltage > V_Max:
             voltage = V_Max
         try:
-            dac._write_fast_mode(round(voltage/V_Max*2**DAC_res)) #attempt write fast-mode
+            dac._write_fast_mode(round(voltage/V_Max*2**(DAC_res-1))) #attempt write fast-mode
         except:
             print(f"DAC voltage output must be between 0 and {V_Max} V")  
     
