@@ -100,7 +100,7 @@ class PI_Controller:
         if voltage > V_Max:
             voltage = V_Max
         try:
-            dac.raw_value = round(voltage/V_Max*2**DAC_res)        
+            dac._write_fast_mode(round(voltage/V_Max*2**DAC_res)) #attempt write fast-mode
         except:
             print(f"DAC voltage output must be between 0 and {V_Max} V")  
     
