@@ -54,6 +54,7 @@ class PI_Controller:
     #Initialisation
     def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300,sampling_f = 200) -> None:
         self.test_status = test 
+        self._init_arrays()
         self.continuous = continuous #if reading loops itself
         self.test_duration = test_duration           
         self.active = True
@@ -63,36 +64,13 @@ class PI_Controller:
         self.sampling_f = sampling_f
         if self.sampling_f >=860:
             self.sampling_f = 860
-        self.num_samples = self.sampling_f*test_duration
-        self.t_period =  self.test_duration/corr_num
+        self.num_samples = self.sampling_f*self.test_duration
+        
  
         
-        match self.test_status:
-            case 0: #PI simple signals
-                self.dac_order = []
-                self.dac_order_time =[]
-                self.adc_output = []
-                self.adc_output_time = []
-                self.pwm_output = []
-                self._test = np.bool_([0,0]) #voltage test
-                ADS.mode = 0 # put ads in continuous mode for reading speed  
-                self.Run() #switch on
-            case 1: #Proto 1
-                self.adc_output = []
-                self.adc_output_time = []                
-                self._test = np.bool_([1,0]) 
-                self.time = time.time()
-            
-                self.Run() #switch on
-            case 2: #Proto 2
-                self._test = np.bool_([0,1])  #signal test
-                self.time = time.time()
-         
-            case 3: #Real case
-                self._test = np.bool_([1,1]) 
+
         
             
-
     
     #Streamlined ADC/DAC function to manipulate in/out voltages
 
@@ -124,27 +102,23 @@ class PI_Controller:
     def Run(self): #activate switch function , auto-start
     
         #    #print("flag")
-        t_start = self._now()
+        self.t_start = self._now()
         self.th1 = threading.Thread(target = self._HW_start)
         self.th1.daemon = True
         self.th1.start()
         self.counter = 0
-        perc_1=0
+        self.perc_1=0
         
         
         while self.counter< self.num_samples: #finish signal by points collected
-            perc_2 = self.counter/self.num_samples*100
-            if abs(perc_2-perc_1)>10:
-                print(perc_2,self.counter/self._now(t_start))
-                perc_1 = perc_2
-
+            self._freq_AutoCal()
 
          #finish test
         self._save_figs()
-        print(f"{self._now(t_start)} secs have passed, test finished!")
+        print(f"{self._now(self.t_start)} secs have passed, test finished!")
         self.Switch()
-        if not self.active:
-            self.th1.join()        
+
+               
     
 
 
@@ -160,6 +134,34 @@ class PI_Controller:
         self.start_time = time.time()
 
     """Private functions in charge of hardware signal sending and collection"""
+
+    """Array Init private function"""
+    def _init_arrays(self):
+        self.t_period =  self.test_duration/corr_num
+        match self.test_status:
+            case 0: #PI simple signals
+                self.dac_order = []
+                self.dac_order_time =[]
+                self.adc_output = []
+                self.adc_output_time = []
+                self.pwm_output = []
+                self._test = np.bool_([0,0]) #voltage test
+                ADS.mode = 0 # put ads in continuous mode for reading speed  
+                self.Run() #switch on
+            case 1: #Proto 1
+                self.adc_output = []
+                self.adc_output_time = []                
+                self._test = np.bool_([1,0]) 
+                self.time = time.time()
+            
+                self.Run() #switch on
+            case 2: #Proto 2
+                self._test = np.bool_([0,1])  #signal test
+                self.time = time.time()
+         
+            case 3: #Real case
+                self._test = np.bool_([1,1]) 
+
     #function governing LED activation, DAC
     def __LED(self):
         #no proto or proto 1
@@ -208,13 +210,34 @@ class PI_Controller:
             pass
         pass
 
+    def _freq_AutoCal(self):
+        new_freq - self.sampling_f
+        self.perc_2 = self.counter/self.num_samples*100
+        if abs(self.perc_2-self.perc_1)>1:
+            new_freq = self.counter/self._now(self.t_start)
+            print(self.perc_2,self.counter/self._now(self.t_start))
+            self.perc_1 = self.perc_2
+        if abs(new_freq-self.sampling_f)/self.sampling_f <1e-2:
+            self.Switch() #Turn off parallel thread
+            print(f"Real frequncy is {new_freq} HZ instead of {self.sampling_f} Hz, recalibrating...")
+            self.sampling_f = new_freq
+            self.test_duration = self.num_samples/self.sampling_f
+            print(f"New Test duration is {self.test_duration}")
+            self._init_arrays()
+            self.Run()
+            return
+
+
+
     def _HW_start(self): #activate all hardware signals and readers
         self._Calibrate()
         self.__Temp()
         while self.active:    #main parallel thread loop
             self.__LED()
             self.__PhotoDRead()
-            #time.sleep(1/self.sampling_f-1/860) #adjust to sampling frequency + 860Hz round for DAC conversion
+            time.sleep(1/self.sampling_f-1/860) #adjust to sampling frequency + 860Hz round for DAC conversion
+        if not self.active: #Thread autocloses upon deactivation
+            self.th1.join()     
 
     def _progbar(self):
         bar_length = 100
