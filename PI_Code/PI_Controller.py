@@ -99,8 +99,10 @@ class PI_Controller:
     def set_DAC(self,voltage): #set dac ouput voltage
         if voltage > V_Max:
             voltage = V_Max
+        dac_volt = round(voltage/V_Max*(2**DAC_res-1))    
+          
         try:
-            dac.raw_value(round(voltage/V_Max*2**(DAC_res-1))) #attempt write fast-mode
+            dac._write_fast_mode(dac_volt)#attempt write fast-mode
         except:
             print(f"DAC voltage output must be between 0 and {V_Max} V")  
     
@@ -264,4 +266,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =5,sampling_f=100)
+    test1 = PI_Controller(test =0,test_duration =5,sampling_f=100)
