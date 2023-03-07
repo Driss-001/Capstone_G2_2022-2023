@@ -3,11 +3,9 @@ import time,os,urllib3,board,busio,pwmio,threading
 from adafruit_extended_bus import ExtendedI2C as I2C
 import math as mt
 import numpy as np
-from scipy.interpolate import InterpolatedUnivariateSpline
 import matplotlib.pyplot as plt  
 from pathlib2 import Path
 from astropy.io import fits 
-import astropy.modeling.functional_models as astromodels
 from scipy.integrate import simpson as sps   
 import adafruit_mcp4725 as MCP
 import adafruit_ads1x15.ads1115 as ADS
