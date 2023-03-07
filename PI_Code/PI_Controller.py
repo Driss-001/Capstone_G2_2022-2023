@@ -13,26 +13,27 @@ import adafruit_mcp4725 as MCP
 import adafruit_ads1x15.ads1115 as ADS
 from adafruit_ads1x15.analog_in import AnalogIn
 import datetime as dt
+import pickle as pkl
 
 #constants
 path_length = 5 # in meters
 DAC_res =  12
 ADC_res =  16
-V_Max = 3.3 #max gpio output voltage
+VMAX = 3.3 #max volt-pin output voltage
 
 #constant functions
-dac_raw = lambda volt: volt/V_Max*2**DAC_res
+dac_raw = lambda volt: volt/VMAX*2**DAC_res
 #create I2C buses
 
-dac_address = 0x62
-adc_address = 0x48
+DAC_ADDRESS = 0x62
+ADC_ADDRESS = 0x48
 i2c1 = I2C(1)
 i2c2 = I2C(6)
 
-dac = MCP.MCP4725(address=dac_address,i2c=i2c1)
-adc = ADS.ADS1115(address=adc_address,i2c = i2c2,data_rate=860)
-#get_dacvolt  = lambda x: x*V_Max/2**ADC_res
-#get_adcvolt = lambda x: x*V_Max/2**DAC_res
+dac = MCP.MCP4725(address=DAC_ADDRESS,i2c=i2c1)
+adc = ADS.ADS1115(address=ADC_ADDRESS,i2c = i2c2,data_rate=860)
+#get_dacvolt  = lambda x: x*VMAX/2**ADC_res
+#get_adcvolt = lambda x: x*VMAX/2**DAC_res
 Gain = ADC_res/16 #gain of 1
 
 #pwm init
@@ -41,7 +42,7 @@ duty_cycle = lambda x: (2**16-1)/100*x #Duty cycle is 16bits, return duty cycle 
 
 #Triangle ramp signal/correlations wanted
 
-corr_num = 2
+CORR_NUM = 2
 
 class PI_Controller:
     """Raspberry pi code to activate the (S)LED, heat the u-chip and collect signal from the photodiode
@@ -52,7 +53,8 @@ class PI_Controller:
     """
     
     #Initialisation
-    def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300,sampling_f = 200) -> None:
+    def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300,sampling_f = 200, autorun = 0) -> None:
+
         self.test_status = test 
         self._init_arrays()
         self.continuous = continuous #if reading loops itself
@@ -66,7 +68,8 @@ class PI_Controller:
             self.sampling_f = 860
         self.num_samples = self.sampling_f*self.test_duration
         
- 
+        if bool(autorun): #Determine autorun
+            self.Run() #switch on
         
 
         
@@ -75,14 +78,14 @@ class PI_Controller:
     #Streamlined ADC/DAC function to manipulate in/out voltages
 
     def set_DAC(self,voltage): #set dac ouput voltage
-        if voltage > V_Max:
-            voltage = V_Max
-        dac_volt = round(voltage/V_Max*(2**DAC_res-1))    
+        if voltage > VMAX:
+            voltage = VMAX
+        dac_volt = round(voltage/VMAX*(2**DAC_res-1))    
           
         try:
             dac._write_fast_mode(dac_volt)#attempt write fast-mode
         except:
-            print(f"DAC voltage output must be between 0 and {V_Max} V")  
+            print(f"DAC voltage output must be between 0 and {VMAX} V")  
     
     def ADC_volt(self,channel = 0)->float: #return ADC voltage from selected channel
         match channel:
@@ -137,7 +140,7 @@ class PI_Controller:
 
     """Array Init private function"""
     def _init_arrays(self):
-        self.t_period =  self.test_duration/corr_num
+        self.t_period =  self.test_duration/CORR_NUM
         match self.test_status:
             case 0: #PI simple signals
                 self.dac_order = []
@@ -147,14 +150,12 @@ class PI_Controller:
                 self.pwm_output = []
                 self._test = np.bool_([0,0]) #voltage test
                 ADS.mode = 0 # put ads in continuous mode for reading speed  
-                self.Run() #switch on
             case 1: #Proto 1
                 self.adc_output = []
                 self.adc_output_time = []                
                 self._test = np.bool_([1,0]) 
                 self.time = time.time()
-            
-                self.Run() #switch on
+                ADS.mode = 0
             case 2: #Proto 2
                 self._test = np.bool_([0,1])  #signal test
                 self.time = time.time()
@@ -168,7 +169,7 @@ class PI_Controller:
         if not self._test[1] and not self._test[0]:
             
             #print(f"counter aues is: {self.counter}")
-            dac_order =self._triangle(self.t_period,V_Max)     
+            dac_order =self._triangle(self.t_period,VMAX)     
             self.set_DAC(dac_order)
             self.counter += 1
             self.dac_order.append(dac_order)
@@ -289,4 +290,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =1,sampling_f=860)
+    test1 = PI_Controller(test =1,test_duration =1,sampling_f=860,autorun=1)
