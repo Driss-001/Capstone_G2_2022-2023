@@ -43,6 +43,7 @@ duty_cycle = lambda x: (2**16-1)/100*x #Duty cycle is 16bits, return duty cycle 
 #Triangle ramp signal/correlations wanted
 
 CORR_NUM = 2
+CURRENT_WD  = os.getcwd()
 
 class PI_Controller:
     """Raspberry pi code to activate the (S)LED, heat the u-chip and collect signal from the photodiode
@@ -53,9 +54,10 @@ class PI_Controller:
     """
     
     #Initialisation
-    def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300,sampling_f = 200, autorun = 0) -> None:
+    def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300,sampling_f = 200, autorun = 0,save_dir = CURRENT_WD+'/PI_Code/data' ) -> None:
 
-        self.test_status = test 
+        self.test_status = test
+        self.save_dir = save_dir
         self._init_arrays()
         self.continuous = continuous #if reading loops itself
         self.test_duration = test_duration           
@@ -140,6 +142,7 @@ class PI_Controller:
 
     """Array Init private function"""
     def _init_arrays(self):
+        self.current_date = dt.datetime.now().strftime('%Y-%m-%d-%H-%M')
         self.t_period =  self.test_duration/CORR_NUM
         match self.test_status:
             case 0: #PI simple signals
@@ -265,7 +268,7 @@ class PI_Controller:
             plt.legend(["DAC py-order","ADC chan0 output (DAC)","ADC chan 1 output(PWM)"])
             plt.ylabel('Voltage (V)')
             plt.xlabel('time(s)')
-            plt.title(f"Rpi4 IO DAC/ADC Test0,sampling @ {self.sampling_f}Hz,date:{dt.datetime.now().strftime('%Y-%m-%d-%H-%M')}")
+            plt.title(f"Rpi4 IO DAC/ADC Test0,sampling @ {self.sampling_f}Hz,date:{self.current_date}")
             plt.savefig("Test0_ADC_DAC_output",dpi = self.dpi)   
 
             plt.clf()
@@ -282,11 +285,20 @@ class PI_Controller:
             plt.legend(["ADC chan1 output  (Photodiode)"])    
             plt.ylabel('Voltage (V)')
             plt.xlabel('time(s)')
-            plt.title(f"Rpi4 IO DAC/ADC Test1,sampling @ {self.sampling_f}Hz,{self.num_samples} points,date:{dt.datetime.now().strftime('%Y-%m-%d-%H-%M')}")
-            plt.savefig(f"Test1_ADC_output_{int(round(self.sampling_f))}_{self.num_samples}_{dt.datetime.now().strftime('%Y-%m-%d-%H-%M')}.png",dpi = self.dpi)
+            plt.title(f"Rpi4 IO DAC/ADC Test1,sampling @ {self.sampling_f}Hz,{self.num_samples} points,date:{self.current_date}")
+            plt.savefig(f"Test1_ADC_output_{int(round(self.sampling_f))}_{self.num_samples}_{self.current_date}.png",dpi = self.dpi)
             plt.clf()   
 
         print("figure Saved!")   
+
+    """"Save Graphs to pkl  """
+    def _topkl(self,*args, j = 0): 
+        dump_pkl = []
+        for i in args:
+            dump_pkl += [i]
+        with open(self.save_dir+f"test{self.test_status}_{self.current_date}_num{j}.pkl", 'wb') as f:
+            pkl.dump(dump_pkl,f)
+
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
