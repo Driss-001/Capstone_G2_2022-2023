@@ -54,7 +54,7 @@ class PI_Controller:
     """
     
     #Initialisation
-    def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300,sampling_f = 200, autorun = 0,save_dir = CURRENT_WD+'/PI_Code/data' ) -> None:
+    def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300,sampling_f = 200, autorun = 0,save_dir = CURRENT_WD+'/PI_Code/data', noise = True ) -> None:
 
         self.test_status = test
         self.save_dir = save_dir
@@ -104,7 +104,7 @@ class PI_Controller:
                 chan3 = AnalogIn(adc,ADS.P3)
                 return chan3.voltage 
 
-    def Run(self): #activate switch function , auto-start
+    def Run(self) -> None: #activate switch function , auto-start
     
         #    #print("flag")
         self.t_start = self._now()
@@ -127,7 +127,7 @@ class PI_Controller:
     
 
 
-    def Switch(self): #toggle activate deactivate
+    def Switch(self) -> None: #toggle activate deactivate
         
         self.active = not self.active
         print(f"active bool is now {self.active}")
@@ -141,7 +141,7 @@ class PI_Controller:
     """Private functions in charge of hardware signal sending and collection"""
 
     """Array Init private function"""
-    def _init_arrays(self):
+    def _init_arrays(self) -> None:
         self.current_date = dt.datetime.now().strftime('%Y-%m-%d-%H-%M')
         self.t_period =  self.test_duration/CORR_NUM
         match self.test_status:
@@ -167,7 +167,7 @@ class PI_Controller:
                 self._test = np.bool_([1,1]) 
 
     #function governing LED activation, DAC
-    def __LED(self):
+    def __LED(self) -> None:
         #no proto or proto 1
         if not self._test[1] and not self._test[0]:
             
@@ -182,14 +182,14 @@ class PI_Controller:
             pass
         pass
 
-    #function producing ramp signal to heat the u-chip, DAC
-    def __Temp(self):
+    #function driving ramp signal to heat the u-chip, DAC
+    def __Temp(self) -> None:
         print("Applying voltage to the Chip...")
         pwm.duty_cycle = duty_cycle(99) #99% Duty cycle for DC voltage
 
 
     #function reading the photodiode output , ADC    
-    def __PhotoDRead(self):
+    def __PhotoDRead(self) -> None:
    
         if not self._test[1] and not self._test[0]: #case signals
             self.adc_output.append(self.ADC_volt(0))
@@ -207,14 +207,14 @@ class PI_Controller:
         return round(time.time()-self.start_time-t,3) 
         
     #function storing initial T°=0 absorption throughport spectrum to compare with T°>0 spectrums 
-    def _Calibrate(self):
+    def _Calibrate(self) -> None:
         if not self._test[1] and not self._test[0]:
             pass
         else:
             pass
         pass
 
-    def _freq_AutoCal(self):
+    def _freq_AutoCal(self) -> None:
         new_freq - self.sampling_f
         self.perc_2 = self.counter/self.num_samples*100
         if abs(self.perc_2-self.perc_1)>1:
@@ -233,7 +233,7 @@ class PI_Controller:
 
 
 
-    def _HW_start(self): #activate all hardware signals and readers
+    def _HW_start(self) -> None: #activate all hardware signals and readers
         self._Calibrate()
         self.__Temp()
         while self.active:    #main parallel thread loop
@@ -248,7 +248,7 @@ class PI_Controller:
         pass
 
     #triangular signal function for PWM-DC system    
-    def _triangle(self,period,peak):
+    def _triangle(self,period,peak) -> float:
         now_time = self._now()
         now_frac = now_time//(period/2)
         now_mod = now_frac%2
@@ -259,7 +259,7 @@ class PI_Controller:
 
     """Private functions for data handling"""
    
-    def _save_figs(self):
+    def _save_figs(self) -> None:
         n = self.num_samples
         if not self._test[1] and not self._test[0]:
             plt.plot(self.dac_order_time[0:n],self.dac_order[0:n],c ="black")
@@ -289,16 +289,28 @@ class PI_Controller:
             plt.savefig(f"Test1_ADC_output_{int(round(self.sampling_f))}_{self.num_samples}_{self.current_date}.png",dpi = self.dpi)
             plt.clf()   
 
-        print("figure Saved!")   
+        print("figure Saved!")  
+        
 
-    """"Save Graphs to pkl  """
-    def _topkl(self,*args, j = 0): 
+    def _Gauss_Cancel(self):
+        pass     
+
+    """" Save & load Graphs pkl  """
+    def _topkl(self,*args, j = 0) -> None: 
         dump_pkl = []
+        file_name = f"test{self.test_status}_{self.current_date}_num{j}.pkl"
         for i in args:
             dump_pkl += [i]
-        with open(self.save_dir+f"test{self.test_status}_{self.current_date}_num{j}.pkl", 'wb') as f:
+        with open(self.save_dir+file_name, 'wb') as f:
             pkl.dump(dump_pkl,f)
+        print(f"{file_name} saved!")
 
+    def _frompkl(self, current_date,j =0) -> list:
+
+        file_name = f"test{self.test_status}_{current_date}_num{j}.pkl"    
+        with open(self.save_dir+file_name, 'rb') as f:
+            pkl_fetch = pkl.load(f)
+        return pkl_fetch    
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
