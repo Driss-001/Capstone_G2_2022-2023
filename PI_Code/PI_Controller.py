@@ -57,7 +57,7 @@ class PI_Controller:
         self.test_status = test
         self.save_dir = save_dir
         self.m_run = c_noise
-        self._init_arrays()
+        
         self.continuous = continuous #if reading loops itself
         self.test_duration = test_duration           
         self.active = True
@@ -67,6 +67,7 @@ class PI_Controller:
         self.sampling_f = sampling_f
         if self.sampling_f >=860:
             self.sampling_f = 860
+        self._init_arrays()
         self.num_samples = self.sampling_f*self.test_duration
         
         if bool(autorun): #Determine autorun
@@ -109,16 +110,15 @@ class PI_Controller:
     
         #    #print("flag")
         self.t_start = self._now()
+        self.perc_1=0
         self.th1 = threading.Thread(target = self._HW_start)
         self.th1.daemon = True
         self.th1.start()
-        self.counter = 0
-        self.perc_1=0
-        
+
         
         while self.counter< self.num_samples: #finish signal by points collected
-            self._freq_AutoCal()
-
+            self._Temp()
+            
          #finish test
         n = self.num_samples 
         self._figure_pkl(n)
@@ -126,6 +126,7 @@ class PI_Controller:
             self._save_figs(n)
         print(f"{self._now(self.t_start)} secs have passed, test finished!")
         self.Switch()
+        self.th1.join()
 
 
     def M_Run(self):
@@ -153,6 +154,8 @@ class PI_Controller:
     def _init_arrays(self) -> None:
         self.current_date = dt.datetime.now().strftime('%Y-%m-%d-%H-%M')
         self.t_period =  self.test_duration/CORR_NUM
+        self.counter = 0
+        
         match self.test_status:
             case 0: #PI simple signals
                 self.dac_order = []
@@ -192,9 +195,9 @@ class PI_Controller:
         pass
 
     #function driving ramp signal to heat the u-chip, DAC
-    def __Temp(self) -> None:
-        print("Applying voltage to the Chip...")
-        pwm.duty_cycle = duty_cycle(self._triangle(self.period,100)) #99% Duty cycle for DC voltage
+    def _Temp(self) -> None:
+        #print("Applying voltage to the Chip...")
+        pwm.duty_cycle = duty_cycle(self._triangle(self.t_period,100)) #99% Duty cycle for DC voltage
 
 
     #function reading the photodiode output , ADC    
@@ -224,33 +227,35 @@ class PI_Controller:
         pass
 
     def _freq_AutoCal(self) -> None:
-        new_freq - self.sampling_f
+        new_freq = self.sampling_f
         self.perc_2 = self.counter/self.num_samples*100
-        if abs(self.perc_2-self.perc_1)>1:
+        if abs(self.perc_2-self.perc_1)>5:
             new_freq = self.counter/self._now(self.t_start)
-            print(self.perc_2,self.counter/self._now(self.t_start))
+            print(self.perc_2,new_freq,self.sampling_f)
             self.perc_1 = self.perc_2
-        if abs(new_freq-self.sampling_f)/self.sampling_f <1e-2:
-            self.Switch() #Turn off parallel thread
+        if abs(new_freq-self.sampling_f)>1:
+            #self.Switch() #Turn off parallel thread
             print(f"Real frequncy is {new_freq} HZ instead of {self.sampling_f} Hz, recalibrating...")
             self.sampling_f = new_freq
             self.test_duration = self.num_samples/self.sampling_f
             print(f"New Test duration is {self.test_duration}")
             self._init_arrays()
-            self.Run()
-            return
+            print(self.counter,self.num_samples,self.active)
+            
 
 
 
     def _HW_start(self) -> None: #activate all hardware signals and readers
         self._Calibrate()
-        self.__Temp()
+        
         while self.active:    #main parallel thread loop
             self.__LED()
             self.__PhotoDRead()
-            time.sleep(1/self.sampling_f-1/860) #adjust to sampling frequency + 860Hz round for DAC conversion
-        if not self.active: #Thread autocloses upon deactivation
-            self.th1.join()     
+            self._freq_AutoCal()
+
+            #self.__Temp()
+            #time.sleep(1/self.sampling_f-1/860) #adjust to sampling frequency + 860Hz round for DAC conversion
+            
 
     def _progbar(self):
         bar_length = 100
@@ -328,4 +333,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =1,sampling_f=860,autorun=1)
+    test1 = PI_Controller(test =0,test_duration =10,sampling_f=100,autorun=1)
