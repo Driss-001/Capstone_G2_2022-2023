@@ -52,10 +52,11 @@ class PI_Controller:
     """
     
     #Initialisation
-    def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300,sampling_f = 200, autorun = 0,save_dir = CURRENT_WD+'/PI_Code/data', noise = True ) -> None:
+    def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300,sampling_f = 200, autorun = 0,save_dir = CURRENT_WD+'/PI_Code/data', c_noise = False ) -> None:
 
         self.test_status = test
         self.save_dir = save_dir
+        self.m_run = c_noise
         self._init_arrays()
         self.continuous = continuous #if reading loops itself
         self.test_duration = test_duration           
@@ -69,8 +70,10 @@ class PI_Controller:
         self.num_samples = self.sampling_f*self.test_duration
         
         if bool(autorun): #Determine autorun
-            self.Run() #switch on
-        
+            if not self.m_run:
+                self.Run() #switch on
+            else:
+                self.M_Rrun()
 
         
             
@@ -117,11 +120,19 @@ class PI_Controller:
             self._freq_AutoCal()
 
          #finish test
-        self._save_figs()
+        n = self.num_samples 
+        self._figure_pkl(n)
+        if not self.m_run:
+            self._save_figs(n)
         print(f"{self._now(self.t_start)} secs have passed, test finished!")
         self.Switch()
 
-               
+
+    def M_Run(self):
+        for i in range(0,10):
+            self.Run()
+
+        self._Gauss_Cancel()           
     
 
 
@@ -256,9 +267,14 @@ class PI_Controller:
             return peak*(1-2/period*(now_time-period/2*now_frac)) 
 
     """Private functions for data handling"""
-   
-    def _save_figs(self) -> None:
-        n = self.num_samples
+    
+    def _figure_pkl(self,n):
+        if not self._test[1] and not self._test[0]:
+            self._topkl(self.adc_output_time[0:n],self.adc_output[0:n],self.pwm_output[0:n])
+        if not self._test[1] and  self._test[0]:
+            self._topkl(self.adc_output_time[0:n],self.adc_output[0:n])         
+
+    def _save_figs(self,n) -> None:
         if not self._test[1] and not self._test[0]:
             plt.plot(self.dac_order_time[0:n],self.dac_order[0:n],c ="black")
             plt.scatter(self.adc_output_time[0:n],self.adc_output[0:n],c="red")
@@ -279,7 +295,7 @@ class PI_Controller:
             #plt.savefig("Test0_Latency_output",dpi = self.dpi)
             return
         if not self._test[1] and  self._test[0]:  
-            plt.plot(self.adc_output_time,self.adc_output,c="blue")
+            plt.plot(self.adc_output_time[0:n],self.adc_output[0:n],c="blue")
             plt.legend(["ADC chan1 output  (Photodiode)"])    
             plt.ylabel('Voltage (V)')
             plt.xlabel('time(s)')
