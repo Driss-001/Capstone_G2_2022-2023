@@ -40,7 +40,7 @@ duty_cycle = lambda x: (2**16-1)/100*x #Duty cycle is 16bits, return duty cycle 
 
 #Triangle ramp signal/correlations wanted
 
-CORR_NUM = 2
+CORR_NUM = 5
 CURRENT_WD  = os.getcwd()
 
 class PI_Controller:
@@ -194,7 +194,7 @@ class PI_Controller:
     #function driving ramp signal to heat the u-chip, DAC
     def __Temp(self) -> None:
         print("Applying voltage to the Chip...")
-        pwm.duty_cycle = duty_cycle(99) #99% Duty cycle for DC voltage
+        pwm.duty_cycle = duty_cycle(self._triangle(self.period,100)) #99% Duty cycle for DC voltage
 
 
     #function reading the photodiode output , ADC    
