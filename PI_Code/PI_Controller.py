@@ -40,8 +40,7 @@ duty_cycle = lambda x: round((2**16-1)/100*x) #Duty cycle is 16bits, return duty
 pwm = pwmio.PWMOut(board.D13,frequency = PWM_f) #initialising pwm with desired frequency
 
 
-#Triangle ramp signal/correlations wanted
-
+#Number of triangle ramp signal/correlations wanted
 CORR_NUM = 5
 CURRENT_WD  = os.getcwd()
 
