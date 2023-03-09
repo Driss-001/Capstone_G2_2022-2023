@@ -35,7 +35,7 @@ adc = ADS.ADS1115(address=ADC_ADDRESS,i2c = i2c2,data_rate=860)
 Gain = ADC_res/16 #gain of 1
 
 #pwm init
-PWM_fmax = 2**32/500 # max pwm 32 bits frequency at 500 <-> 1Hz
+PWM_fmax = (2**32-1)/500 # max pwm 32 bits frequency at 500 <-> 1Hz
 frequency_32 = lambda x:round((2**32-1)/PWM_fmax*x)  #Frequency 32 bits 
 duty_cycle = lambda x: round((2**16-1)/100*x) #Duty cycle is 16bits, return duty cycle percentage
 pwm = pwmio.PWMOut(board.D13,frequency = frequency_32(1e5)) #initialising pwm 100kHz
