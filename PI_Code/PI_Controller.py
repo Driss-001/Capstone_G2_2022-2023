@@ -70,7 +70,7 @@ class PI_Controller:
         if self.sampling_f >=860:
             self.sampling_f = 860
         self._init_arrays()
-        self.num_samples = self.sampling_f*self.test_duration
+        self.num_samples = self.sampling_f*self.test_duration #Number of samples wanted: constant
         
         if bool(autorun): #Determine autorun
             if not self.m_run:
@@ -234,7 +234,7 @@ class PI_Controller:
     def _freq_AutoCal(self) -> None:
         new_freq = self.sampling_f
         self.perc_2 = self.counter/self.num_samples*100
-        if abs(self.perc_2-self.perc_1)>5:
+        if abs(self.perc_2-self.perc_1)>10: #average check over 10%
             new_freq = self.counter/self._now(self.t_start)
             print(self.perc_2,new_freq,self.sampling_f)
             self.perc_1 = self.perc_2
@@ -342,4 +342,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =0,test_duration =10,sampling_f=100,autorun=1)
+    test1 = PI_Controller(test =0,test_duration =10,sampling_f=100,autorun=1) #1000 points frequency test
