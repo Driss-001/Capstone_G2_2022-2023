@@ -10,12 +10,13 @@ from scipy.integrate import simpson as sps
 import adafruit_mcp4725 as MCP
 import adafruit_ads1x15.ads1115 as ADS
 from adafruit_ads1x15.analog_in import AnalogIn
+import RPi.GPIO as Gpio
 import datetime as dt
 import pickle as pkl
 #import progressbar as pbar
 
 #constants
-path_length = 5 # in meters
+path_length = 3 # in meters
 DAC_res =  12
 ADC_res =  16
 VMAX = 3.3 #max volt-pin output voltage
@@ -36,13 +37,20 @@ adc = ADS.ADS1115(address=ADC_ADDRESS,i2c = i2c2,data_rate=860)
 Gain = ADC_res/16 #gain of 1
 
 #pwm init
-PWM_f = 1e6 #1MHz frequency
+RPI_pin = 13
+PWM_f = 1e4
+#1MHz frequency
+Gpio.setmode(Gpio.BCM)
+Gpio.setup(RPI_pin, Gpio.OUT)
+Gpio.setup(RPI_pin,Gpio.LOW)
 duty_cycle = lambda x: round((2**16-1)/100*x) #Duty cycle is 16bits, return duty cycle percentage
-pwm = pwmio.PWMOut(board.D13,frequency = PWM_f) #initialising pwm with desired frequency
+#pwm = pwmio.PWMOut(board.D13,frequency = PWM_f) #initialising pwm with desired frequency
+pwm =Gpio.PWM(RPI_pin,PWM_f)
+pwm.start(0)
 
 
 #Number of triangle ramp signal/correlations wanted
-CORR_NUM = 5
+CORR_NUM = 3
 CURRENT_WD  = os.getcwd()
 
 class PI_Controller:
@@ -202,9 +210,9 @@ class PI_Controller:
     #function driving ramp signal to heat the u-chip, DAC
     def _Temp(self) -> None:
         #print("Applying voltage to the Chip...")
-        pwm.duty_cycle = duty_cycle(self._triangle(self.t_period,100)) #99% Duty cycle for DC voltage
-
-
+        #pwm.duty_cycle = duty_cycle(self._triangle(self.t_period,100)) #99% Duty cycle for DC voltage
+        pwm.ChangeDutyCycle(self._triangle(self.t_period,100))
+        #pwm.ChangeDutyCycle(90)
     #function reading the photodiode output , ADC    
     def __PhotoDRead(self) -> None:
    
@@ -256,11 +264,12 @@ class PI_Controller:
         while self.active:    #main parallel thread loop
             self.__LED()
             self.__PhotoDRead()
-            self._freq_AutoCal()
+            #elf._freq_AutoCal()
 
             #self.__Temp()
             #time.sleep(1/self.sampling_f-1/860) #adjust to sampling frequency + 860Hz round for DAC conversion
-            
+        #pwm.duty_cycle = duty_cycle(0) #reset the pwm    
+        pwm.stop()    
 
     def _progbar(self,count_value, total,T_now,suffix=''):
         bar_length = 100
@@ -342,4 +351,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =0,test_duration =10,sampling_f=100,autorun=1) #1000 points frequency test
+    test1 = PI_Controller(test =0,test_duration =50,sampling_f=40,autorun=1) #1000 points frequency test
