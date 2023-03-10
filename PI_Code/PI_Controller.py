@@ -1,5 +1,5 @@
 
-import time,os,urllib3,board,busio,pwmio,threading
+import sys,time,os,urllib3,board,busio,pwmio,threading
 from adafruit_extended_bus import ExtendedI2C as I2C
 import math as mt
 import numpy as np
@@ -12,6 +12,7 @@ import adafruit_ads1x15.ads1115 as ADS
 from adafruit_ads1x15.analog_in import AnalogIn
 import datetime as dt
 import pickle as pkl
+#import progressbar as pbar
 
 #constants
 path_length = 5 # in meters
@@ -58,7 +59,7 @@ class PI_Controller:
         self.test_status = test
         self.save_dir = save_dir
         self.m_run = c_noise
-        
+        self.current_date = dt.datetime.now().strftime('%Y-%m-%d-%H-%M')
         self.continuous = continuous #if reading loops itself
         self.test_duration = test_duration           
         self.active = True
@@ -119,8 +120,9 @@ class PI_Controller:
         
         while self.counter< self.num_samples: #finish signal by points collected
             self._Temp()
-            
+            self._progbar(self.counter,self.num_samples,self._now(self.t_start),"Sampling")
          #finish test
+
         n = self.num_samples 
         self._figure_pkl(n)
         if not self.m_run:
@@ -151,12 +153,13 @@ class PI_Controller:
 
     """Private functions in charge of hardware signal sending and collection"""
 
+
     """Array Init private function"""
     def _init_arrays(self) -> None:
-        self.current_date = dt.datetime.now().strftime('%Y-%m-%d-%H-%M')
         self.t_period =  self.test_duration/CORR_NUM
         self.counter = 0
         
+        # Initialise arrays
         match self.test_status:
             case 0: #PI simple signals
                 self.dac_order = []
@@ -179,6 +182,7 @@ class PI_Controller:
             case 3: #Real case
                 self._test = np.bool_([1,1]) 
 
+    """Hardware functions"""
     #function governing LED activation, DAC
     def __LED(self) -> None:
         #no proto or proto 1
@@ -241,7 +245,7 @@ class PI_Controller:
             self.test_duration = self.num_samples/self.sampling_f
             print(f"New Test duration is {self.test_duration}")
             self._init_arrays()
-            print(self.counter,self.num_samples,self.active)
+            print("Status is now progress %s, Active:%s" %(self.counter/self.num_samples*100,self.active))
             
 
 
@@ -258,9 +262,13 @@ class PI_Controller:
             #time.sleep(1/self.sampling_f-1/860) #adjust to sampling frequency + 860Hz round for DAC conversion
             
 
-    def _progbar(self):
+    def _progbar(self,count_value, total,T_now,suffix=''):
         bar_length = 100
-        pass
+        filled_up_Length = int(round(bar_length* count_value / float(total)))
+        percentage = round(100.0 * count_value/float(total),1)
+        bar = '=' * filled_up_Length + '-' * (bar_length - filled_up_Length)
+        sys.stdout.write('Progress[%s] %s%s,Time elapsed:[%s%s] ...%s\r' %(bar, percentage, '%', T_now,"s",suffix))
+        sys.stdout.flush()
 
     #triangular signal function for PWM-DC system    
     def _triangle(self,period,peak) -> float:
