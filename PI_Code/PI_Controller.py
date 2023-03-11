@@ -13,6 +13,7 @@ from adafruit_ads1x15.analog_in import AnalogIn
 import RPi.GPIO as Gpio
 import datetime as dt
 import pickle as pkl
+import pigpio  
 #import progressbar as pbar
 
 #constants
@@ -45,8 +46,10 @@ Gpio.setup(RPI_pin, Gpio.OUT)
 Gpio.setup(RPI_pin,Gpio.LOW)
 duty_cycle = lambda x: round((2**16-1)/100*x) #Duty cycle is 16bits, return duty cycle percentage
 #pwm = pwmio.PWMOut(board.D13,frequency = PWM_f) #initialising pwm with desired frequency
-pwm =Gpio.PWM(RPI_pin,PWM_f)
-pwm.start(0)
+#pwm =Gpio.PWM(RPI_pin,PWM_f)
+#pwm.start(0)
+pwm = pigpio.pi() 
+pwm.set_mode(RPI_pin, pigpio.OUTPUT)
 
 
 #Number of triangle ramp signal/correlations wanted
@@ -130,12 +133,14 @@ class PI_Controller:
             self._Temp()
             self._progbar(self.counter,self.num_samples,self._now(self.t_start),"Sampling")
          #finish test
-
+        self.pwm_stop()
         n = self.num_samples 
         self._figure_pkl(n)
         if not self.m_run:
             self._save_figs(n)
-        print(f"{self._now(self.t_start)} secs have passed, test finished!")
+            print(f"{self._now(self.t_start)} secs have passed, test finished!")
+        else:
+            print("run finished")        
         self.Switch()
         self.th1.join()
 
@@ -159,6 +164,11 @@ class PI_Controller:
     def Reset_time(self):
         self.start_time = time.time()
 
+
+    def pwm_stop(self):
+
+        pwm.hardware_PWM(RPI_pin, 0, 0)               # turn off the PWM
+        
     """Private functions in charge of hardware signal sending and collection"""
 
 
@@ -209,10 +219,14 @@ class PI_Controller:
 
     #function driving ramp signal to heat the u-chip, DAC
     def _Temp(self) -> None:
+        
+        DC = self._triangle(self.t_period,100)
         #print("Applying voltage to the Chip...")
-        #pwm.duty_cycle = duty_cycle(self._triangle(self.t_period,100)) #99% Duty cycle for DC voltage
-        pwm.ChangeDutyCycle(self._triangle(self.t_period,100))
+        #pwm.duty_cycle = duty_cycle(DC) #99% Duty cycle for DC voltage
+        
+        #pwm.ChangeDutyCycle(DC)
         #pwm.ChangeDutyCycle(90)
+        pwm.hardware_PWM(RPI_pin, PWM_f, DC * 10000)
     #function reading the photodiode output , ADC    
     def __PhotoDRead(self) -> None:
    
@@ -328,6 +342,7 @@ class PI_Controller:
 
         print("figure Saved!")  
         
+
 
     def _Gauss_Cancel(self):
         pass     
