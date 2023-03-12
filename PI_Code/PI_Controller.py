@@ -46,10 +46,10 @@ Gpio.setup(RPI_pin, Gpio.OUT)
 Gpio.setup(RPI_pin,Gpio.LOW)
 duty_cycle = lambda x: round((2**16-1)/100*x) #Duty cycle is 16bits, return duty cycle percentage
 #pwm = pwmio.PWMOut(board.D13,frequency = PWM_f) #initialising pwm with desired frequency
-#pwm =Gpio.PWM(RPI_pin,PWM_f)
-#pwm.start(0)
-pwm = pigpio.pi() 
-pwm.set_mode(RPI_pin, pigpio.OUTPUT)
+pwm =Gpio.PWM(RPI_pin,PWM_f)
+pwm.start(0)
+#pwm = pigpio.pi() 
+#pwm.set_mode(RPI_pin, pigpio.OUTPUT)
 
 
 #Number of triangle ramp signal/correlations wanted
@@ -224,9 +224,9 @@ class PI_Controller:
         #print("Applying voltage to the Chip...")
         #pwm.duty_cycle = duty_cycle(DC) #99% Duty cycle for DC voltage
         
-        #pwm.ChangeDutyCycle(DC)
+        pwm.ChangeDutyCycle(DC)
         #pwm.ChangeDutyCycle(90)
-        pwm.hardware_PWM(RPI_pin, PWM_f, DC * 10000)
+        #pwm.hardware_PWM(RPI_pin, PWM_f, DC * 10000)
     #function reading the photodiode output , ADC    
     def __PhotoDRead(self) -> None:
    
