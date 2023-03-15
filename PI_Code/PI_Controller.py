@@ -31,7 +31,7 @@ ADC_ADDRESS = 0x48
 i2c1 = I2C(1)
 i2c2 = I2C(6)
 
-dac = MCP.MCP4725(address=DAC_ADDRESS,i2c=i2c1)
+
 adc = ADS.ADS1115(address=ADC_ADDRESS,i2c = i2c2,data_rate=860)
 #get_dacvolt  = lambda x: x*VMAX/2**ADC_res
 #get_adcvolt = lambda x: x*VMAX/2**DAC_res
@@ -39,7 +39,7 @@ Gain = ADC_res/16 #gain of 1
 
 #pwm init
 RPI_pin = 13
-PWM_f = 10**3
+PWM_f =1.5*10**3
 #1MHz frequency
 Gpio.setmode(Gpio.BCM)
 Gpio.setup(RPI_pin, Gpio.OUT)
@@ -54,7 +54,7 @@ pwm.start(0)
 
 
 #Number of triangle ramp signal/correlations wanted
-CORR_NUM = 3
+CORR_NUM = 5
 CURRENT_WD  = os.getcwd()
 
 class PI_Controller:
@@ -130,7 +130,7 @@ class PI_Controller:
         self.th1.start()
 
         
-        while self.counter< self.num_samples: #finish signal by points collected
+        while self.counter< self.num_samples+1: #finish signal by points collected
             self._Temp()
             self._progbar(self.counter,self.num_samples,self._now(self.t_start),"Sampling")
          #finish test
@@ -182,6 +182,7 @@ class PI_Controller:
         # Initialise arrays
         match self.test_status:
             case 0: #PI simple signals
+                self._init_DAC()
                 self.dac_order = []
                 self.dac_order_time =[]
                 self.adc_output = []
@@ -203,6 +204,10 @@ class PI_Controller:
                 self._test = np.bool_([1,1]) 
 
     """Hardware functions"""
+
+    def _init_DAC(self):
+        dac = MCP.MCP4725(address=DAC_ADDRESS,i2c=i2c1)
+
     #function governing LED activation, DAC
     def __LED(self) -> None:
         #no proto or proto 1
@@ -221,8 +226,8 @@ class PI_Controller:
 
     #function driving ramp signal to heat the u-chip, DAC
     def _Temp(self) -> None:
-        #DC = 50
-        DC = self._triangle(self.t_period,100)
+        DC = 50 #50% SC test
+        #DC = self._triangle(self.t_period,100)
         #print("Applying voltage to the Chip...")
         #pwm.duty_cycle = duty_cycle(DC) #99% Duty cycle for DC voltage
         
@@ -367,4 +372,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =50,sampling_f=40,autorun=1) #1000 points frequency test
+    test1 = PI_Controller(test =1,test_duration =20,sampling_f=40,autorun=1) #1000 points frequency test
