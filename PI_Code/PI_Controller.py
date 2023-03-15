@@ -13,7 +13,7 @@ from adafruit_ads1x15.analog_in import AnalogIn
 import RPi.GPIO as Gpio
 import datetime as dt
 import pickle as pkl
-import pigpio  
+#import pigpio  
 #import progressbar as pbar
 
 #constants
@@ -39,7 +39,7 @@ Gain = ADC_res/16 #gain of 1
 
 #pwm init
 RPI_pin = 13
-PWM_f = 1e4
+PWM_f = 10**3
 #1MHz frequency
 Gpio.setmode(Gpio.BCM)
 Gpio.setup(RPI_pin, Gpio.OUT)
@@ -48,6 +48,7 @@ duty_cycle = lambda x: round((2**16-1)/100*x) #Duty cycle is 16bits, return duty
 #pwm = pwmio.PWMOut(board.D13,frequency = PWM_f) #initialising pwm with desired frequency
 pwm =Gpio.PWM(RPI_pin,PWM_f)
 pwm.start(0)
+
 #pwm = pigpio.pi() 
 #pwm.set_mode(RPI_pin, pigpio.OUTPUT)
 
@@ -89,7 +90,7 @@ class PI_Controller:
             else:
                 self.M_Rrun()
 
-        
+       
             
     
     #Streamlined ADC/DAC function to manipulate in/out voltages
@@ -133,7 +134,8 @@ class PI_Controller:
             self._Temp()
             self._progbar(self.counter,self.num_samples,self._now(self.t_start),"Sampling")
          #finish test
-        self.pwm_stop()
+        pwm.stop()
+        #self.pwm_stop()
         n = self.num_samples 
         self._figure_pkl(n)
         if not self.m_run:
@@ -219,7 +221,7 @@ class PI_Controller:
 
     #function driving ramp signal to heat the u-chip, DAC
     def _Temp(self) -> None:
-        
+        #DC = 50
         DC = self._triangle(self.t_period,100)
         #print("Applying voltage to the Chip...")
         #pwm.duty_cycle = duty_cycle(DC) #99% Duty cycle for DC voltage
@@ -230,8 +232,7 @@ class PI_Controller:
     #function reading the photodiode output , ADC    
     def __PhotoDRead(self) -> None:
    
-        if not self._test[1] and not self._test[0]: #case signals
-            self.adc_output.append(self.ADC_volt(0))
+        if not self._test[1] and not self._test[0]: #case signals    """Hardware functions"""
             self.pwm_output.append(self.ADC_volt(1))
             self.adc_output_time.append(self._now())
             return 
@@ -242,7 +243,7 @@ class PI_Controller:
 
         self.counter = len(self.adc_output) #recorded DAC output length
 
-    def _now(self,t=0): #current time for performance tracking
+    def _now(self,t=0): #current time for performance tracking    """Hardware functions"""
         return round(time.time()-self.start_time-t,3) 
         
     #function storing initial T°=0 absorption throughport spectrum to compare with T°>0 spectrums 
@@ -366,4 +367,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =0,test_duration =50,sampling_f=40,autorun=1) #1000 points frequency test
+    test1 = PI_Controller(test =1,test_duration =50,sampling_f=40,autorun=1) #1000 points frequency test
