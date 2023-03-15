@@ -54,7 +54,7 @@ pwm.start(0)
 
 
 #Number of triangle ramp signal/correlations wanted
-CORR_NUM = 5
+CORR_NUM = 3
 CURRENT_WD  = os.getcwd()
 
 class PI_Controller:
@@ -226,8 +226,8 @@ class PI_Controller:
 
     #function driving ramp signal to heat the u-chip, DAC
     def _Temp(self) -> None:
-        DC = 50 #50% SC test
-        #DC = self._triangle(self.t_period,100)
+        #DC = 10 #50% SC test
+        DC = self._triangle(self.t_period,100)
         #print("Applying voltage to the Chip...")
         #pwm.duty_cycle = duty_cycle(DC) #99% Duty cycle for DC voltage
         
@@ -372,4 +372,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =20,sampling_f=40,autorun=1) #1000 points frequency test
+    test1 = PI_Controller(test =1,test_duration =60,sampling_f=40,autorun=1) #1000 points frequency test
