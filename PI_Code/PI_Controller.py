@@ -39,7 +39,7 @@ Gain = ADC_res/16 #gain of 1
 
 #pwm init
 RPI_pin = 13
-PWM_f =1.5*10**3
+PWM_f =1.5*10**4
 #1MHz frequency
 Gpio.setmode(Gpio.BCM)
 Gpio.setup(RPI_pin, Gpio.OUT)
