@@ -39,7 +39,7 @@ Gain = ADC_res/16 #gain of 1
 
 #pwm init
 RPI_pin = 13
-PWM_f =1.5*10**4
+PWM_f =1e4
 #1MHz frequency
 Gpio.setmode(Gpio.BCM)
 Gpio.setup(RPI_pin, Gpio.OUT)
@@ -77,7 +77,6 @@ class PI_Controller:
         self.active = True
         self.dpi = dpi
         self.Reset_time()
-        self.counter = 0
         self.sampling_f = sampling_f
         if self.sampling_f >=860:
             self.sampling_f = 860
@@ -101,7 +100,7 @@ class PI_Controller:
         dac_volt = round(voltage/VMAX*(2**DAC_res-1))    
           
         try:
-            dac._write_fast_mode(dac_volt)#attempt write fast-mode
+            self.dac._write_fast_mode(dac_volt)#attempt write fast-mode
         except:
             print(f"DAC voltage output must be between 0 and {VMAX} V")  
     
@@ -206,7 +205,7 @@ class PI_Controller:
     """Hardware functions"""
 
     def _init_DAC(self):
-        dac = MCP.MCP4725(address=DAC_ADDRESS,i2c=i2c1)
+        self.dac = MCP.MCP4725(address=DAC_ADDRESS,i2c=i2c1)
 
     #function governing LED activation, DAC
     def __LED(self) -> None:
@@ -216,7 +215,6 @@ class PI_Controller:
             #print(f"counter aues is: {self.counter}")
             dac_order =self._triangle(self.t_period,VMAX)     
             self.set_DAC(dac_order)
-            self.counter += 1
             self.dac_order.append(dac_order)
             self.dac_order_time.append(self._now())
             return
@@ -238,6 +236,7 @@ class PI_Controller:
     def __PhotoDRead(self) -> None:
    
         if not self._test[1] and not self._test[0]: #case signals    """Hardware functions"""
+            self.adc_output.append(self.ADC_volt(0))
             self.pwm_output.append(self.ADC_volt(1))
             self.adc_output_time.append(self._now())
             return 
@@ -320,6 +319,7 @@ class PI_Controller:
     def _save_figs(self,n) -> None:
         if not self._test[1] and not self._test[0]:
             plt.plot(self.dac_order_time[0:n],self.dac_order[0:n],c ="black")
+            print(len(self.adc_output),len(self.adc_output_time),n)
             plt.scatter(self.adc_output_time[0:n],self.adc_output[0:n],c="red")
             plt.scatter(self.adc_output_time[0:n],self.pwm_output[0:n],c="green")
             plt.legend(["DAC py-order","ADC chan0 output (DAC)","ADC chan 1 output(PWM)"])
@@ -372,4 +372,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =60,sampling_f=40,autorun=1) #1000 points frequency test
+    test1 = PI_Controller(test =1,test_duration =40,sampling_f=40,autorun=1) #1000 points frequency test
