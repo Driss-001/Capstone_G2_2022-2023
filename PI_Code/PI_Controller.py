@@ -39,7 +39,7 @@ Gain = ADC_res/16 #gain of 1
 
 #pwm init
 RPI_pin = 13
-PWM_f =1e3
+PWM_f =2e3
 #1MHz frequency
 Gpio.setmode(Gpio.BCM)
 Gpio.setup(RPI_pin, Gpio.OUT)
@@ -54,7 +54,7 @@ pwm.start(0)
 
 
 #Number of triangle ramp signal/correlations wanted
-CORR_NUM = 3
+CORR_NUM = 1
 CURRENT_WD  = os.getcwd()
 
 class PI_Controller:
@@ -379,4 +379,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =40,sampling_f=45,autorun=1) #1000 points frequency test
+    test1 = PI_Controller(test =1,test_duration =40,sampling_f=100,autorun=1) #1000 points frequency test
