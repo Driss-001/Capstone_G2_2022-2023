@@ -9,6 +9,7 @@ import urllib3
 from astropy.io import fits 
 import astropy.modeling.functional_models as astromodels
 from scipy.integrate import simpson as sps   
+import pickle as pkl
 
 #Constants
 PI=mt.pi
@@ -49,48 +50,20 @@ noise=0.01   #in percent of normalized background signal .  It's the standard de
 #===========================
 exoplanet_abs_depth=100  #in percent
 
-#Set the gas saturation fraction  (in %)
-#===========================
-C2H2=0
-CH3=0
-CH4=0
-CO=0
-CO2=25
-H2O=100
-HCN=0
-NH3=0
-NO=0
-O2=0
-O3=0
-OH=0
-absorption_depths=[C2H2,CH3,CH4,CO,CO2,H2O,HCN,NH3,NO,O2,O3,OH] #Put the absorption depths into an array
-#===========================
-
-
-#Initalize arrays
-
-gas_names=[]
-gas_names_ext=[]
-absorption_array=[]
-gas_names_present='Gases: '
-# find all the files in the Lines directory
-i=0
-for entry in os.listdir(basepath+"\\Lines\\"):
-    if os.path.isfile(os.path.join(basepath+"\\Lines\\", entry)):   #check if there is a file in the directory
-        gas_names.append(entry[:-4])    #remove the file extension
-        gas_names_ext.append(entry)     #build an array of the file names with the extensions
-    i=i+1
 
 #print(gas_names)
 #plt.show()
 
 class Resonator:
-    def __init__(self,Temp = np.arange(0,10,1) ,wave_start=1575E-9,wave_finish=1585E-9, ring_length = ring_length, coupling_in = r1,coupling_out = r2,rt_losscoef = a) -> None:
+    def __init__(self,Temp = np.arange(0,10,1) ,wave_start=1575E-9,wave_finish=1590E-9, ring_length = ring_length, coupling_in = r1,coupling_out = r2,rt_losscoef = a, concentration = 100,save_dir =cwd+ '\\Reson_Sim\\Training_db\\') -> None:
         #Initialisation
 
         self.start = time.time()
+        self.concentration = concentration
+        self.gas_init()
         self.temperature = Temp
-        self.wavelength=np.arange(wave_start, wave_finish,(wave_finish-wave_start)/(2**(round(mt.log2((wave_finish-wave_start)/10E-12-1)))+1))    
+        self.wavelength=np.arange(wave_start, wave_finish,(wave_finish-wave_start)/(2**(round(mt.log2((wave_finish-wave_start)/10E-12-1)))+1))
+        self.concentration = concentration   
         self.number_of_wavelengths=len(self.wavelength)
         self.n_eff = n_eff_interp(self.wavelength)
         self.n_g = n_g_interp(self.wavelength)
@@ -100,6 +73,40 @@ class Resonator:
         self.a = rt_losscoef # round trip loss coefficient of the ring resonator
         self.noise_profile = np.random.normal(1, noise/100, size=len(self.wavelength))
         self.produce_spectrum()
+
+
+    def gas_init(self):
+                #Set the gas saturation fraction  (in %)
+        #===========================
+        C2H2=0
+        CH3=0
+        CH4=0
+        CO=0
+        CO2= self.concentration
+        H2O=0
+        HCN=0
+        NH3=0
+        NO=0
+        O2=0
+        O3=0
+        OH=0
+        self.absorption_depths=[C2H2,CH3,CH4,CO,CO2,H2O,HCN,NH3,NO,O2,O3,OH] #Put the absorption depths into an array
+        #===========================
+
+
+        #Initalize arrays
+
+        self.gas_names=[]
+        self.gas_names_ext=[]
+        self.absorption_array=[]
+        self.gas_names_present='Gases: '
+        # find all the files in the Lines directory
+        i=0
+        for entry in os.listdir(basepath+"\\Lines\\"):
+            if os.path.isfile(os.path.join(basepath+"\\Lines\\", entry)):   #check if there is a file in the directory
+                self.gas_names.append(entry[:-4])    #remove the file extension
+                self.gas_names_ext.append(entry)     #build an array of the file names with the extensions
+            i=i+1
 
 
     #This function calculates the spectral shift as a function of chip temperature
@@ -115,26 +122,26 @@ class Resonator:
     def produce_spectrum(self)->None:
 
         y=np.zeros((len(self.wavelength),1))
-        gas_names_present='Gases: '
+        self.gas_names_present='Gases: '
         gas_count=0  #index of the gas.
         gas_present_count=0
-        for i in gas_names_ext:   #Iterate over the files that were loaded (including file extension)
+        for i in self.gas_names_ext:   #Iterate over the files that were loaded (including file extension)
 
-            if absorption_depths[gas_count] != 0:  #Why bother doing calculations if we don't want the gas in the bandpass? Let's skip it
-                absorption_array=np.loadtxt(basepath+"\\Lines\\"+gas_names_ext[gas_count]) #Load the HITRAN data into an array from text file
+            if self.absorption_depths[gas_count] != 0:  #Why bother doing calculations if we don't want the gas in the bandpass? Let's skip it
+                self.absorption_array=np.loadtxt(basepath+"\\Lines\\"+self.gas_names_ext[gas_count]) #Load the HITRAN data into an array from text file
                 line_count=0  #Start spectral line count for one gas
-                print(gas_names[gas_count] + " at abs depth of " + str(absorption_depths[gas_count])+ '%')   #Print the gas line absorption depth and gas name
-                gas_names_present+=str(gas_names[gas_count]) + ', '
-                absorption_array[:,1]=absorption_array[:,1]/max(absorption_array[:,1])  #Normalize the absorption cross-section
+                print(self.gas_names[gas_count] + " at abs depth of " + str(self.absorption_depths[gas_count])+ '%')   #Print the gas line absorption depth and gas name
+                self.gas_names_present+=str(self.gas_names[gas_count]) + ', '
+                self.absorption_array[:,1]=self.absorption_array[:,1]/max(self.absorption_array[:,1])  #Normalize the absorption cross-section
 
-                for i in absorption_array[:,1]:
-                    v1 = astromodels.Voigt1D(x_0=absorption_array[line_count,0]*nm, amplitude_L=1.3*absorption_depths[gas_count]*absorption_array[line_count,1]/100, fwhm_L=lorentzian_fwhm*pm, fwhm_G=gaussian_fwhm*pm) #Calculate voigt profiles for one line at a time
+                for i in self.absorption_array[:,1]:
+                    v1 = astromodels.Voigt1D(x_0=self.absorption_array[line_count,0]*nm, amplitude_L=1.3*self.absorption_depths[gas_count]*self.absorption_array[line_count,1]/100, fwhm_L=lorentzian_fwhm*pm, fwhm_G=gaussian_fwhm*pm) #Calculate voigt profiles for one line at a time
                     y[:,0]=y[:,0]+v1(self.wavelength)        #Add voigt profiles to the spectra
                     line_count=line_count+1 #Count iteration for each spectral line in the wavleength region
 
                 gas_present_count=gas_present_count+1    
             gas_count=gas_count+1   #Count iteration for next gas
-        print(gas_names_present)
+        print(self.gas_names_present)
         abs_spectrum=1-y        #Subtract from normalized flat background (should add a star background eventually...one day....*sigh*)
         self.abs_spectrum= abs_spectrum.clip(min=0)      #Clip the data since you can't have negative light intensity
         #abs_spectrum=1-abs_spectrum                 #Flip the data to prep for the exoplanet abs fraction contribution
@@ -173,7 +180,7 @@ class Resonator:
 
 
     def display_port(self,range:range)->None:
-        plt.figure(dpi=600)
+        plt.figure(dpi=300)
         
         legend = []
         for i in range:
@@ -187,7 +194,7 @@ class Resonator:
         plt.show()
 
     def display_output(self,range:range)->None:
-        plt.figure(dpi=600)
+        plt.figure(dpi=300)
         legend = ["absorption spectrum"]
         plt.plot(self.wavelength,self.temperature[-1]+self.abs_spectrum)
         for i in range:
@@ -200,12 +207,24 @@ class Resonator:
         plt.ylabel("Normalised Power")
 
     def display_correlation(self)->None:
-        plt.figure(dpi=600)
+        plt.figure(dpi=300)
         plt.plot(self.temperature,self.correlation)
         plt.xlabel("Temperature change °C")
         plt.ylabel("Correlation")
         
-        
+    def cmin(self) -> None:
+        return(min(self.correlation))
+    
+    """Private Functions"""
+
+    def _topkl(self,*args) -> None: 
+        dump_pkl = []
+        file_name = f"Training_C{self.concentration}.pkl"
+        for i in args:
+            dump_pkl += [i]
+        with open(self.save_dir+file_name, 'wb') as f:
+            pkl.dump(dump_pkl,f)
+        print(f"{file_name} saved!")    
 
 
     def transmit_spectrum(self)->None: #send spectrum to the raspberry-pi
