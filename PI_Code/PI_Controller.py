@@ -315,7 +315,7 @@ class PI_Controller:
         if not self._test[1] and not self._test[0]:
             self._topkl(self.adc_output_time[0:n],self.adc_output[0:n],self.pwm_output[0:n])
         if not self._test[1] and  self._test[0]:
-            self._topkl(self.adc_output_time[0:n],self.adc_output[0:n])         
+            self._topkl(self.adc_output_time[0:n],self.adc_output[0:n],min(self.adc_output[0:n]),self.concentration)         
 
     def _save_figs(self,n) -> None:
         if not self._test[1] and not self._test[0]:
