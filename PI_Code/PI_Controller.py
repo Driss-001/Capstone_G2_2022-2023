@@ -66,9 +66,10 @@ class PI_Controller:
     """
     
     #Initialisation
-    def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300,sampling_f = 200, autorun = 0,save_dir = CURRENT_WD+'/PI_Code/data', c_noise = False ) -> None:
+    def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300,sampling_f = 200, autorun = 0,save_dir = CURRENT_WD+'/PI_Code/data', c_noise = False, conc = 100 ) -> None:
 
         self.test_status = test
+        self.concentration = conc
         self.save_dir = save_dir
         self.m_run = c_noise
         self.current_date = dt.datetime.now().strftime('%Y-%m-%d-%H-%M')
@@ -354,18 +355,24 @@ class PI_Controller:
         pass     
 
     """" Save & load Graphs pkl  """
-    def _topkl(self,*args, j = 0) -> None: 
+    def _topkl(self,*args,training = False) -> None: 
         dump_pkl = []
-        file_name = f"test{self.test_status}_{self.current_date}_num{j}.pkl"
+        if not training:
+            file_name = f"test{self.test_status}_{self.current_date}_C{round(self.concentr)}.pkl"
+        else:
+            file_name = f"test{self.test_status}__C{self.concentration}.pkl"    
         for i in args:
             dump_pkl += [i]
         with open(self.save_dir+file_name, 'wb') as f:
             pkl.dump(dump_pkl,f)
         print(f"{file_name} saved!")
 
-    def _frompkl(self, current_date,j =0) -> list:
+    def _frompkl(self, test_status,current_date = None,c = 100, training = False) -> list: #so far only for training
 
-        file_name = f"test{self.test_status}_{current_date}_num{j}.pkl"    
+        if not training:
+            file_name = f"test{test_status}_{current_date}.pkl"
+        else:    
+            file_name = f"test{test_status}__C{c}.pkl"    
         with open(self.save_dir+file_name, 'rb') as f:
             pkl_fetch = pkl.load(f)
         return pkl_fetch    
