@@ -133,6 +133,10 @@ class PI_Controller:
         while self.counter< self.num_samples+1: #finish signal by points collected
             self._Temp()
             self._progbar(self.counter,self.num_samples,self._now(self.t_start),"Sampling")
+            try:
+                pass
+            except KeyboardInterrupt:
+                pwm.stop() #On KB int stop the pwm
          #finish test
         pwm.stop()
         #self.pwm_stop()
