@@ -39,7 +39,7 @@ Gain = ADC_res/16 #gain of 1
 
 #pwm init
 RPI_pin = 13
-PWM_f =1e4
+PWM_f =1e3
 #1MHz frequency
 Gpio.setmode(Gpio.BCM)
 Gpio.setup(RPI_pin, Gpio.OUT)
@@ -358,7 +358,7 @@ class PI_Controller:
     def _topkl(self,*args,training = False) -> None: 
         dump_pkl = []
         if not training:
-            file_name = f"test{self.test_status}_{self.current_date}_C{round(self.concentr)}.pkl"
+            file_name = f"test{self.test_status}_{self.current_date}_C{round(self.concentration,2)}.pkl"
         else:
             file_name = f"test{self.test_status}__C{self.concentration}.pkl"    
         for i in args:
