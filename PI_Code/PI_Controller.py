@@ -68,11 +68,12 @@ class PI_Controller:
     """
     
     #Initialisation
-    def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300,sampling_f = 200, autorun = 0,save_dir = cwd, c_noise = False, conc = 100, Training = False ) -> None:
+    def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300,sampling_f = 200, autorun = 0,save_dir = cwd, c_noise = False, conc = 100, Training = False,n_iter = 10 ) -> None:
 
         self.test_status = test
         self.concentration = conc
         self.Training = Training
+        self.n_iter = n_iter
         if self.Training:
             self.save_dir = save_dir+'/PI_Code/training'
         else:
@@ -94,7 +95,7 @@ class PI_Controller:
             if not self.m_run:
                 self.Run() #switch on
             else:
-                self.M_Rrun()
+                self.M_Run(self.n_iter)
 
        
             
@@ -143,11 +144,11 @@ class PI_Controller:
                 pass
             except KeyboardInterrupt:
                 pwm.stop() #On KB int stop the pwm
-         #finish test
-        pwm.stop()
+        
         #self.pwm_stop()
         n = self.num_samples 
         if not self.m_run:
+            pwm.stop()
             self._figure_pkl(n)
             self._save_figs(n)
             print(f"{self._now(self.t_start)} secs have passed, test finished!")
@@ -157,14 +158,21 @@ class PI_Controller:
         self.th1.join()
 
 
-    def M_Run(self):
-        gauss_dac_array
-        for i in range(0,10):
+    def M_Run(self,n_iter = 10):
+        ADC_Gauss = np.zeros(self.num_samples)
+        for i in range(0,n_iter):
             self.Run()
-
-        self._Gauss_Cancel()           
-    
-
+            ADC_Gauss+= np.array(self.adc_output[0:self.num_samples])/10
+            if i == n_iter-1:
+                pass
+            else:
+                self._init_arrays()
+                self.Switch()
+        pwm.stop()       
+        self.adc_output = ADC_Gauss     
+        n = self.num_samples
+        self._figure_pkl(n)
+        self._save_figs(n)
 
     def Switch(self) -> None: #toggle activate deactivate
         
@@ -252,11 +260,11 @@ class PI_Controller:
         if not self._test[1] and not self._test[0]: #case signals    """Hardware functions"""
             self.adc_output.append(self.ADC_volt(0))
             self.pwm_output.append(self.ADC_volt(1))
-            self.adc_output_time.append(self._now())
+            self.adc_output_time.append(self._now(self.t_start))
             return 
         if not self._test[1] and  self._test[0]:
             self.adc_output.append(self.ADC_volt(2))
-            self.adc_output_time.append(self._now())
+            self.adc_output_time.append(self._now(self.t_start))
         pass    
 
         self.counter = len(self.adc_output) #recorded DAC output length
@@ -392,4 +400,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =1,sampling_f=100,autorun=1) #1000 points frequency test
+    test1 = PI_Controller(test =1,test_duration =2,sampling_f=100,autorun=1,c_noise=True) #1000 points frequency test
