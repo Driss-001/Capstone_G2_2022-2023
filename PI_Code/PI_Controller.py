@@ -315,12 +315,12 @@ class PI_Controller:
     #triangular signal function for PWM-DC system    
     def _triangle(self,period,peak) -> float:
         now_time = self._now()
-        now_frac = now_time//(period/2)
+        now_frac = now_time//(period)
         now_mod = now_frac%2
         if now_mod == 0:
-            return peak*2/period*(now_time-period/2*now_frac)
+            return peak/period*(now_time-period*now_frac)
         else:
-            return peak*(1-2/period*(now_time-period/2*now_frac)) 
+            return peak*(1-1/period*(now_time-period*now_frac)) 
 
     """Private functions for data handling"""
     
@@ -392,4 +392,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =30,sampling_f=100,autorun=1) #1000 points frequency test
+    test1 = PI_Controller(test =1,test_duration =10,sampling_f=100,autorun=1) #1000 points frequency test
