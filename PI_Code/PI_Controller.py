@@ -162,17 +162,17 @@ class PI_Controller:
         ADC_Gauss = np.zeros(self.num_samples)
         for i in range(0,n_iter):
             self.Run()
-            ADC_Gauss+= np.array(self.adc_output[0:self.num_samples])/10
+            ADC_Gauss+= np.array(self.adc_output[0:self.num_samples])/n_iter
             if i == n_iter-1:
                 pass
             else:
                 self._init_arrays()
-                self.Switch()
-        pwm.stop()       
+                self.Switch()      
         self.adc_output = ADC_Gauss     
         n = self.num_samples
         self._figure_pkl(n)
         self._save_figs(n)
+        pwm.stop()
 
     def Switch(self) -> None: #toggle activate deactivate
         
@@ -400,4 +400,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =2,sampling_f=100,autorun=1,c_noise=True) #1000 points frequency test
+    test1 = PI_Controller(test =1,test_duration =1,n_iter = 100,sampling_f=100,autorun=1) #1000 points frequency test
