@@ -13,6 +13,8 @@ from adafruit_ads1x15.analog_in import AnalogIn
 import RPi.GPIO as Gpio
 import datetime as dt
 import pickle as pkl
+from scipy.stats import linregress
+
 #import pigpio  
 #import progressbar as pbar
 
@@ -55,7 +57,7 @@ pwm.start(0)
 
 #Number of triangle ramp signal/correlations wanted
 CORR_NUM = 1
-CURRENT_WD  = os.getcwd()
+cwd  = os.getcwd()
 
 class PI_Controller:
     """Raspberry pi code to activate the (S)LED, heat the u-chip and collect signal from the photodiode
@@ -66,11 +68,15 @@ class PI_Controller:
     """
     
     #Initialisation
-    def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300,sampling_f = 200, autorun = 0,save_dir = CURRENT_WD+'/PI_Code/data', c_noise = False, conc = 100 ) -> None:
+    def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300,sampling_f = 200, autorun = 0,save_dir = cwd, c_noise = False, conc = 100, Training = False ) -> None:
 
         self.test_status = test
         self.concentration = conc
-        self.save_dir = save_dir
+        self.Training = Training
+        if self.Training:
+            self.save_dir = save_dir+'/PI_Code/training'
+        else:
+            self.save_dir = save_dir+'/PI_Code/data'                
         self.m_run = c_noise
         self.current_date = dt.datetime.now().strftime('%Y-%m-%d-%H-%M')
         self.continuous = continuous #if reading loops itself
@@ -237,6 +243,8 @@ class PI_Controller:
         pwm.ChangeDutyCycle(DC)
         #pwm.ChangeDutyCycle(90)
         #pwm.hardware_PWM(RPI_pin, PWM_f, DC * 10000)
+
+        
     #function reading the photodiode output , ADC    
     def __PhotoDRead(self) -> None:
    
@@ -316,9 +324,9 @@ class PI_Controller:
     """Private functions for data handling"""
     
     def _figure_pkl(self,n):
-        if not self._test[1] and not self._test[0]:
+        if not self._test[1] and not self._test[0]: #Test 0 save (x,y) coords
             self._topkl(self.adc_output_time[0:n],self.adc_output[0:n],self.pwm_output[0:n])
-        if not self._test[1] and  self._test[0]:
+        if not self._test[1] and  self._test[0]:    #Test 1 save (x,y) coords, min(y) & gas concentration
             self._topkl(self.adc_output_time[0:n],self.adc_output[0:n],min(self.adc_output[0:n]),self.concentration)         
 
     def _save_figs(self,n) -> None:
@@ -371,12 +379,13 @@ class PI_Controller:
             pkl.dump(dump_pkl,f)
         print(f"{file_name} saved!")
 
-    def _frompkl(self, test_status,current_date = None,c = 100, training = False) -> list: #so far only for training
+    def _frompkl(self, test_status,current_date = None,c = 100) -> list: #so far only for training
 
-        if not training:
-            file_name = f"test{test_status}_{current_date}.pkl"
+        if not self.training:
+            file_name = f"test{test_status}_{current_date}.pkl" # Date for non-training data, showcase
         else:    
-            file_name = f"test{test_status}__C{c}.pkl"    
+            file_name = f"test{test_status}__C{c}.pkl"   #Training data only requires concentration as identifier
+
         with open(self.save_dir+file_name, 'rb') as f:
             pkl_fetch = pkl.load(f)
         return pkl_fetch    
