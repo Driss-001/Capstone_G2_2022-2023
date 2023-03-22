@@ -147,8 +147,8 @@ class PI_Controller:
         pwm.stop()
         #self.pwm_stop()
         n = self.num_samples 
-        self._figure_pkl(n)
         if not self.m_run:
+            self._figure_pkl(n)
             self._save_figs(n)
             print(f"{self._now(self.t_start)} secs have passed, test finished!")
         else:
@@ -158,6 +158,7 @@ class PI_Controller:
 
 
     def M_Run(self):
+        gauss_dac_array
         for i in range(0,10):
             self.Run()
 
@@ -363,8 +364,7 @@ class PI_Controller:
         
 
 
-    def _Gauss_Cancel(self):
-        pass     
+  
 
     """" Save & load Graphs pkl  """
     def _topkl(self,*args,training = False) -> None: 
