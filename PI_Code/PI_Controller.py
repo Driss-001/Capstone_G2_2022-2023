@@ -163,16 +163,18 @@ class PI_Controller:
         for i in range(0,n_iter):
             self.Run()
             ADC_Gauss+= np.array(self.adc_output[0:self.num_samples])/n_iter
+            pwm.stop()
+            time.sleep(1)
             if i == n_iter-1:
                 pass
             else:
                 self._init_arrays()
-                self.Switch()      
+                self.Switch()
+                pwm.start(0)      
         self.adc_output = ADC_Gauss     
         n = self.num_samples
         self._figure_pkl(n)
         self._save_figs(n)
-        pwm.stop()
 
     def Switch(self) -> None: #toggle activate deactivate
         
@@ -248,7 +250,7 @@ class PI_Controller:
         DC = self._triangle(self.t_period,100)
         #print("Applying voltage to the Chip...")
         #pwm.duty_cycle = duty_cycle(DC) #99% Duty cycle for DC voltage
-        
+        #print(DC)
         pwm.ChangeDutyCycle(DC)
         #pwm.ChangeDutyCycle(90)
         #pwm.hardware_PWM(RPI_pin, PWM_f, DC * 10000)
@@ -271,8 +273,7 @@ class PI_Controller:
 
     def _now(self,t=0): #current time for performance tracking    """Hardware functions"""
         return round(time.time()-self.start_time-t,3) 
-        
-    #function storing initial T°=0 absorption throughport spectrum to compare with T°>0 spectrums 
+        wm =Gpio.PWM(RPI_pin,PWM_f)
     def _Calibrate(self) -> None:
         if not self._test[1] and not self._test[0]:
             pass
@@ -400,4 +401,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =1,n_iter = 100,sampling_f=100,autorun=1) #1000 points frequency test
+    test1 = PI_Controller(test =1,test_duration =1,n_iter = 5,sampling_f=100,autorun=1,conc=100) #1000 points frequency test
