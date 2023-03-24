@@ -68,16 +68,18 @@ class PI_Controller:
     """
     
     #Initialisation
-    def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300,sampling_f = 200, autorun = 0,save_dir = cwd, c_noise = False, conc = 100, Training = False,n_iter = 10 ) -> None:
+    def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300,sampling_f = 200, autorun = 0,save_dir = cwd, c_noise = False, conc = 100, Training = False,n_iter = 10, detection = False ) -> None:
 
         self.test_status = test
         self.concentration = conc
         self.Training = Training
         self.n_iter = n_iter
+        self.detection =  detection
         if self.Training:
             self.save_dir = save_dir+'/PI_Code/training'
         else:
-            self.save_dir = save_dir+'/PI_Code/data'                
+            self.save_dir = save_dir+'/PI_Code/data'
+        self.data_dir =   save_dir+'/PI_Code/training'                  
         self.m_run = c_noise
         self.current_date = dt.datetime.now().strftime('%Y-%m-%d-%H-%M')
         self.continuous = continuous #if reading loops itself
@@ -147,6 +149,8 @@ class PI_Controller:
         
         #self.pwm_stop()
         n = self.num_samples 
+        if self.detection:
+            self.conc_detect(n)
         if not self.m_run:
             pwm.stop()
             self._figure_pkl(n)
@@ -187,10 +191,19 @@ class PI_Controller:
     def Reset_time(self):
         self.start_time = time.time()
 
+    def Reset_Arrays(self):
+        self._init_arrays()    
+
 
     def pwm_stop(self):
 
         pwm.hardware_PWM(RPI_pin, 0, 0)               # turn off the PWM
+
+    def conc_detect(self,n):
+        f = self._model()
+        current_min = min(self.adc_output[0:n])
+        self.concentration = round(f(current_min),2)
+         
         
     """Private functions in charge of hardware signal sending and collection"""
 
@@ -321,7 +334,7 @@ class PI_Controller:
         sys.stdout.write('Progress[%s] %s%s,Time elapsed:[%s%s] ...%s\r' %(bar, percentage, '%', T_now,"s",suffix))
         sys.stdout.flush()
 
-    #triangular signal function for PWM-DC system    
+    #seasaw signal function for PWM-DC system    
     def _triangle(self,period,peak) -> float:
         now_time = self._now()
         now_frac = now_time//(period)
@@ -332,6 +345,26 @@ class PI_Controller:
             return peak*(1-1/period*(now_time-period*now_frac)) 
 
     """Private functions for data handling"""
+
+    def _model(self):
+        l = []
+        c = []
+        corr_min = []
+        for root, dirs, files in os.walk(self.data_dir):
+            for names in files:
+                l.append(names)
+        for file  in l:
+            with open(file, 'rb') as f:
+                fetch = pkl.load(f)
+                c.append(fetch[3])
+                corr_min.append(fetch[2])
+        corr_min = np.array(corr_min)
+        c = np.array(c)  
+        m1 = linregress(corr_min,c)
+        lin_model = lambda x: m1.intercept+x*m1.slope  
+        return lin_model       
+            
+
     
     def _figure_pkl(self,n):
         if not self._test[1] and not self._test[0]: #Test 0 save (x,y) coords
@@ -365,11 +398,14 @@ class PI_Controller:
             plt.legend(["ADC chan1 output  (Photodiode)"])    
             plt.ylabel('Voltage (V)')
             plt.xlabel('time(s)')
-            plt.title(f"Rpi4 IO DAC/ADC Test1,sampling @ {self.sampling_f}Hz,{self.num_samples} points,date:{self.current_date}")
-            plt.savefig(f"Test1_ADC_output_{int(round(self.sampling_f))}_{self.num_samples}_{self.current_date}.png",dpi = self.dpi)
+            plt.title(f"Rpi4 IO DAC/ADC Test1,sampling @ {self.sampling_f}Hz,{self.num_samples} points,CO2 concentration {self.concentration}%")
+            plt.savefig(f"Test1_ADC_output_C{int(round(self.concentration))}_{self.num_samples}smpls_{self.current_date}.png",dpi = self.dpi)
             plt.clf()   
 
-        print("figure Saved!")  
+        print("figure Saved!") 
+        
+        if  self._test[1] and  not self._test[0]:  
+            pass
         
 
 
@@ -401,4 +437,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =0.5,n_iter = 5,sampling_f=100,autorun=1,conc=100) #50 points frequency test
+    test1 = PI_Controller(test =1,test_duration =0.5,n_iter = 10,sampling_f=100,autorun=1,conc=100,c_noise=True) #50 points frequency test
