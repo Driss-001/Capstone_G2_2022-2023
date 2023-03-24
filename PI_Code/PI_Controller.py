@@ -89,7 +89,7 @@ class PI_Controller:
         if self.sampling_f >=860:
             self.sampling_f = 860
         self._init_arrays()
-        self.num_samples = self.sampling_f*self.test_duration #Number of samples wanted: constant
+        self.num_samples = round(self.sampling_f*self.test_duration) #Number of samples wanted: constant int
         
         if bool(autorun): #Determine autorun
             if not self.m_run:
@@ -401,4 +401,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =1,n_iter = 5,sampling_f=100,autorun=1,conc=100) #1000 points frequency test
+    test1 = PI_Controller(test =1,test_duration =0.5,n_iter = 5,sampling_f=100,autorun=1,conc=100) #50 points frequency test
