@@ -379,7 +379,7 @@ class PI_Controller:
                 t_min  =self.adc_output[i+1]
                 l_min.append(t_min) 
         l_min = np.array(l_min)                
-        return min(l_min)    
+        return max(self.adc_output)-min(l_min)    
 
     
     def _figure_pkl(self,n):
@@ -410,7 +410,7 @@ class PI_Controller:
             #plt.savefig("Test0_Latency_output",dpi = self.dpi)
             return
         if not self._test[1] and  self._test[0]:  
-            plt.plot(self.adc_output_time[0:n],self.adc_output[0:n],c="blue")
+            plt.plot(self.adc_output_time[0:n],self.adc_output[0:n],c="green")
             plt.legend(["ADC chan1 output  (Photodiode)"])    
             plt.ylabel('Voltage (V)')
             plt.xlabel('time(s)')
@@ -455,4 +455,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =0.1,n_iter = 3,sampling_f=100,autorun=1,conc=100,c_noise=True, Training=True) #10 points frequency test
+    test1 = PI_Controller(test =1,test_duration =0.1,n_iter = 3,sampling_f=100,autorun=1,conc=50,c_noise=True, Training=True) #10 points frequency test
