@@ -239,7 +239,7 @@ class PI_Controller:
 
     """Hardware functions"""
 
-    def _init_DAC(self):
+    def _init_DAC(self)->None: #Initialise DAC module
         self.dac = MCP.MCP4725(address=DAC_ADDRESS,i2c=i2c1)
 
     #function governing LED activation, DAC
