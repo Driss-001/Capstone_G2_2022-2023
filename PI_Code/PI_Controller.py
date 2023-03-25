@@ -369,13 +369,13 @@ class PI_Controller:
     def _local_min(self,n):
 
         d = lambda i: (self.adc_output[i]-self.adc_output[i-1])/(self.adc_output_time[i]-self.adc_output_time[i-1])
-        min = []
+        l_min = []
         for i in range(1,n-1):
             if d(i) <0 and d(i+1)>0:
                 t_min  =self.adc_output[i+1]
-                min.append(t_min) 
-        min = np.array(min)                
-        return min(min)    
+                l_min.append(t_min) 
+        l_min = np.array(l_min)                
+        return min(l_min)    
 
     
     def _figure_pkl(self,n):
