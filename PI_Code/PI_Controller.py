@@ -76,10 +76,10 @@ class PI_Controller:
         self.n_iter = n_iter
         self.detection =  detection
         if self.Training:
-            self.save_dir = save_dir+'/PI_Code/training'
+            self.save_dir = save_dir+'/PI_Code/training/'
         else:
-            self.save_dir = save_dir+'/PI_Code/data'
-        self.data_dir =   save_dir+'/PI_Code/training'                  
+            self.save_dir = save_dir+'/PI_Code/data/'
+        self.data_dir =   save_dir+'/PI_Code/training/'                  
         self.m_run = c_noise
         self.current_date = dt.datetime.now().strftime('%Y-%m-%d-%H-%M')
         self.continuous = continuous #if reading loops itself
@@ -201,7 +201,7 @@ class PI_Controller:
 
     def conc_detect(self,n):
         f = self._model()
-        current_min = min(self.adc_output[0:n])
+        current_min = self._local_min(n)#min(self.adc_output[0:n])
         self.concentration = round(f(current_min),2)
          
         
@@ -363,14 +363,23 @@ class PI_Controller:
         m1 = linregress(corr_min,c)
         lin_model = lambda x: m1.intercept+x*m1.slope  
         return lin_model       
-            
+    
+    def _local_min(self,n):
+
+        d = lambda i: (self.adc_output[i]-self.adc_output[i-1])/(self.adc_output_time[i]-self.adc_output_time[i-1])
+    
+        for i in range(1,n):
+            if d(i) <0 and d(i+1)>0:
+                t_min  =self.adc_output[i+1]
+                break          
+        return t_min    
 
     
     def _figure_pkl(self,n):
         if not self._test[1] and not self._test[0]: #Test 0 save (x,y) coords
             self._topkl(self.adc_output_time[0:n],self.adc_output[0:n],self.pwm_output[0:n])
         if not self._test[1] and  self._test[0]:    #Test 1 save (x,y) coords, min(y) & gas concentration
-            self._topkl(self.adc_output_time[0:n],self.adc_output[0:n],min(self.adc_output[0:n]),self.concentration)         
+            self._topkl(self.adc_output_time[0:n],self.adc_output[0:n],self._local_min(n),self.concentration)         
 
     def _save_figs(self,n) -> None:
         if not self._test[1] and not self._test[0]:
@@ -412,21 +421,23 @@ class PI_Controller:
   
 
     """" Save & load Graphs pkl  """
-    def _topkl(self,*args,training = False) -> None: 
+    def _topkl(self,*args) -> None: 
         dump_pkl = []
-        if not training:
+        if not self.Training:
+            folder = self.save_dir
             file_name = f"test{self.test_status}_{self.current_date}_C{round(self.concentration,2)}.pkl"
         else:
+            folder = self.data_dir
             file_name = f"test{self.test_status}__C{self.concentration}.pkl"    
         for i in args:
             dump_pkl += [i]
-        with open(self.save_dir+file_name, 'wb') as f:
+        with open(folder+file_name, 'wb') as f:
             pkl.dump(dump_pkl,f)
         print(f"{file_name} saved!")
 
     def _frompkl(self, test_status,current_date = None,c = 100) -> list: #so far only for training
 
-        if not self.training:
+        if not self.Training:
             file_name = f"test{test_status}_{current_date}.pkl" # Date for non-training data, showcase
         else:    
             file_name = f"test{test_status}__C{c}.pkl"   #Training data only requires concentration as identifier
@@ -437,4 +448,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =0.5,n_iter = 10,sampling_f=100,autorun=1,conc=100,c_noise=True) #50 points frequency test
+    test1 = PI_Controller(test =1,test_duration =0.1,n_iter = 10,sampling_f=100,autorun=1,conc=50,c_noise=False, Training=True) #50 points frequency test
