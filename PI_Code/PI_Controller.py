@@ -355,7 +355,7 @@ class PI_Controller:
             for names in files:
                 l.append(names)
         for file  in l:
-            with open(file, 'rb') as f:
+            with open(self.data_dir+file, 'rb') as f:
                 fetch = pkl.load(f)
                 c.append(fetch[3])
                 corr_min.append(fetch[2])
