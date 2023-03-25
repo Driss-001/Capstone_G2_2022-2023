@@ -262,6 +262,10 @@ class PI_Controller:
     def _Temp(self) -> None:
         #DC = 10 #50% SC test
         DC = self._triangle(self.t_period,100)
+        if DC>100:
+            DC = 100
+        elif DC <0:
+            DC =0   
         #print("Applying voltage to the Chip...")
         #pwm.duty_cycle = duty_cycle(DC) #99% Duty cycle for DC voltage
         #print(DC)
