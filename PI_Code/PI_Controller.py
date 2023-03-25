@@ -175,7 +175,7 @@ class PI_Controller:
             else:
                 self._init_arrays()
                 self.Switch()
-                pwm.start(0)      
+                pwm.start(1)      
         self.adc_output = ADC_Gauss     
         n = self.num_samples
         self._figure_pkl(n)
@@ -287,7 +287,8 @@ class PI_Controller:
 
     def _now(self,t=0): #current time for performance tracking    """Hardware functions"""
         return round(time.time()-self.start_time-t,3) 
-        wm =Gpio.PWM(RPI_pin,PWM_f)
+        
+        
     def _Calibrate(self) -> None:
         if not self._test[1] and not self._test[0]:
             pass
@@ -368,12 +369,13 @@ class PI_Controller:
     def _local_min(self,n):
 
         d = lambda i: (self.adc_output[i]-self.adc_output[i-1])/(self.adc_output_time[i]-self.adc_output_time[i-1])
-    
-        for i in range(1,n):
+        min = []
+        for i in range(1,n-1):
             if d(i) <0 and d(i+1)>0:
                 t_min  =self.adc_output[i+1]
-                break          
-        return t_min    
+                min.append(t_min) 
+        min = np.array(min)                
+        return min(min)    
 
     
     def _figure_pkl(self,n):
@@ -449,4 +451,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =0.1,n_iter = 10,sampling_f=100,autorun=1,conc=0,c_noise=False, detection=True) #10 points frequency test
+    test1 = PI_Controller(test =1,test_duration =0.1,n_iter = 3,sampling_f=100,autorun=1,conc=100,c_noise=True, Training=True) #10 points frequency test
