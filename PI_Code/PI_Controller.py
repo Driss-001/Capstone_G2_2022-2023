@@ -151,6 +151,7 @@ class PI_Controller:
         n = self.num_samples 
         if self.detection:
             self.conc_detect(n)
+            print(f"CO2 concentration detected :{self.concentration}%")
         if not self.m_run:
             pwm.stop()
             self._figure_pkl(n)
@@ -448,4 +449,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =0.1,n_iter = 10,sampling_f=100,autorun=1,conc=50,c_noise=False, Training=True) #50 points frequency test
+    test1 = PI_Controller(test =1,test_duration =0.1,n_iter = 10,sampling_f=100,autorun=1,conc=0,c_noise=False, detection=True) #10 points frequency test
