@@ -344,12 +344,15 @@ class PI_Controller:
     #seasaw signal function for PWM-DC system    
     def _triangle(self,period,peak) -> float:
         now_time = self._now()
-        now_frac = now_time//(period)
-        now_mod = now_frac%2
-        if now_mod == 0:
-            return peak/period*(now_time-period*now_frac)
-        else:
-            return peak*(1-1/period*(now_time-period*now_frac)) 
+        now_frac = now_time//(period/2) #euclidian division 
+        now_mod = now_frac%2 #which period are we on obtained by modulus
+        #linear function going from 0 to peak in period/2
+
+        #if now_mod == 0: #if in first half of the triangle positive slope
+        #    return 2*peak/period*(now_time-period/2*now_frac)
+        #else:
+        #    return peak*(1-1/period*2*(now_time-period/2*now_frac))
+        return peak/period*(now_time-period*now_frac) #seasaw function
 
     """Private functions for data handling"""
 
