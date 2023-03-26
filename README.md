@@ -30,6 +30,8 @@ No gas<br>![](https://github.com/Driss-001/Capstone_G2_2022-2023/blob/main/Test1
 
 T°=0 graph<br>![](https://github.com/Driss-001/Capstone_G2_2022-2023/blob/main/Test1_ADC_output_100_2023-02-10-22-17-57.png?raw=true)<br>
 
-Ramp Temperature applied<br>![T° ramp graph](https://github.com/Driss-001/Capstone_G2_2022-2023/blob/main/Test1_ADC_output_C100_10smpls_2023-03-25-19-01.png?raw=true)<br>
+Human Ramp attempt  <br>![](https://github.com/Driss-001/Capstone_G2_2022-2023/blob/main/Test1_ADC_output_1_2023-02-10-22-13-06.png?raw=true)<br>
+
+Raspberry Pi controlled Ramp :  Temperature applied<br>![T° ramp graph](https://github.com/Driss-001/Capstone_G2_2022-2023/blob/main/Test1_ADC_output_C100_10smpls_2023-03-25-19-01.png?raw=true)<br>
 
 Temperature Expansion effects on the ADC output <br> ![T° expansion ramp graph](https://github.com/Driss-001/Capstone_G2_2022-2023/blob/main/Test1_ADC_output_100_10000_2023-03-22-17-12.png?raw=true)<br>
