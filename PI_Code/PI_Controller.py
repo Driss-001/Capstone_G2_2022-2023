@@ -143,7 +143,7 @@ class PI_Controller:
             self.Run()
             ADC_Gauss+= np.array(self.adc_output[0:self.num_samples])/n_iter
             pwm.stop()
-            time.sleep(1)
+            time.sleep(0.5) #buffer
             if i == n_iter-1:
                 pass
             else:
