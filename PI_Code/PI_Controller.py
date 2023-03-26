@@ -372,14 +372,14 @@ class PI_Controller:
     
     def _local_min(self,n):
 
-        d = lambda i: (self.adc_output[i]-self.adc_output[i-1])/(self.adc_output_time[i]-self.adc_output_time[i-1])
+        d = lambda i: (self.adc_output[i]-self.adc_output[i-1]) #difference function
         l_min = []
         for i in range(1,n-1):
-            if d(i) <0 and d(i+1)>0:
+            if d(i) <0 and d(i+1)>0: #If dip is found store it in local minimum
                 t_min  =self.adc_output[i+1]
                 l_min.append(t_min) 
         l_min = np.array(l_min)                
-        return max(self.adc_output)-min(l_min)    
+        return abs(max(self.adc_output)-min(l_min))  #returns the max distance between this measure's max voltage and global min   
 
     
     def _figure_pkl(self,n):

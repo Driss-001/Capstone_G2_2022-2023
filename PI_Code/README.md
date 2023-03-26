@@ -15,4 +15,4 @@ DAC module:Adafruit MCP4725 Breakout Board - 12-Bit DAC w/I2C Interface [ADA935]
 ADC/DAC pins connection <br> ![Schematics](https://github.com/Driss-001/Capstone_G2_2022-2023/blob/main/Circuits/Rpi_circuit_test0_bb.png?raw=true)<br>
 
 
-
+Temperature Expansiopn effects on the ADC output <br> ![T° expansion ramp graph](https://github.com/Driss-001/Capstone_G2_2022-2023/blob/main/Test1_ADC_output_100_10000_2023-03-22-17-12.png?raw=true)<br>
