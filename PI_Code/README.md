@@ -63,4 +63,7 @@ ADC/DAC pins connection <br> ![Schematics](https://github.com/Driss-001/Capstone
 
 ### Test 1 setup
 
-![](https://github.com/Driss-001/Capstone_G2_2022-2023/blob/main/Test1_Setup.PNG?raw=true)<br>
+Human Ramp circuit<br>![](https://github.com/Driss-001/Capstone_G2_2022-2023/blob/main/Test1_Setup.PNG?raw=true)<br>
+
+Rpi PWM controlled ramp at 2kHz frequency <br>![](https://github.com/Driss-001/Capstone_G2_2022-2023/blob/main/Test1_Setup_wRamp.PNG?raw=true)<br>
+
