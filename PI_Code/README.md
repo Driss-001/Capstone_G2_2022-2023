@@ -63,4 +63,4 @@ ADC/DAC pins connection <br> ![Schematics](https://github.com/Driss-001/Capstone
 
 ### Test 1 setup
 
-![](https://github.com/Driss-001/Capstone_G2_2022-2023/blob/main/Test1_Setup.png?raw=true)<br>
+![](https://github.com/Driss-001/Capstone_G2_2022-2023/blob/main/Test1_Setup.PNG?raw=true)<br>
