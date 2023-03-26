@@ -1,3 +1,48 @@
+# Guide :Python class Pi_Controller(params) Update 26/03/2023 
+By Capstone Group 2
+
+## Python3 version requirements
+case/switch use in the code demands python version >=3.10
+
+## Input
+
+**params =**
+- **test** - default - 0 test type 0,1,2 to be binarised
+- **test_duration** - default = 5, float test duration in seconds
+- **dpi** - default = 300, int Resolution of the output graphs
+- **sampling_f** - default  = 100, float sampling frequency i nHertz
+- **autorun** - default = 0, int boolean for performing the measurement after initialising the class
+- **save_dir** - default  = current working directory (cwd), where to save the pkl files holding the graph data
+- **c_noise** - default = False , boolean determining if gaussian noise cancellation is to be disminished by averaging over n_iter runs.
+- **n_iter** - default = 10, int number of iterations for the gaussian averaging
+- **conc**- default = 100, float defining concentration for a training or test round
+- **Training**- default = False, boolean defining if the round is for the regression model or not
+-  **detection**- default = False, boolean set to determine the CO2 concentration
+
+
+## Attributes
+Alongside input equivalent attributes <br />
+-**active** - boolean for activating the PI hardware modules <br />
+-**num_samples** - number of samples to take, product of frequency and running time, define multithreading while loop stop in the Run method <br />
+-**adc_output** - list holding the main adc output data, in volts <br />
+-**adc_output_time** - list holding the time of sampling, in seconds <br /> 
+-**time** - Process starting time <br />
+-**counter** - int tracking the sampling size.
+
+## Public Methods
+-**Run** - Run a round of sampling/detection <br />
+-**M_Run** - input :int n, Run n rounds of sampling/detection to eliminate gaussian noise <br />
+-**Reset_time** - Reset the general time counter <br />
+-**Switch** - Switch active boolean  <br />
+-**Reset_Arrays** - Reset the data arrays
+
+        
+
+## Use
+Perform temperature correlation measurements by passing a ramp current into the designed photonic chip targeting CO2 absorption lines in the Near Infrared, can be used to calibrate a linear regression model to predict the CO2 concentration.
+
+
+
 ## Step 1 raspberry Pi + Desktop simulation
   
 Control System centered around Rpi-4  
@@ -12,7 +57,10 @@ ADC module :Akozon ADS1115 16-Bit I2C High Precision ADC Development Board for R
 
 DAC module:Adafruit MCP4725 Breakout Board - 12-Bit DAC w/I2C Interface [ADA935]<br> ![](https://m.media-amazon.com/images/I/8151Fv17XSL._AC_SL1200_.jpg)<br>
 
+
+### Test 0 setup
 ADC/DAC pins connection <br> ![Schematics](https://github.com/Driss-001/Capstone_G2_2022-2023/blob/main/Circuits/Rpi_circuit_test0_bb.png?raw=true)<br>
 
+### Test 1 setup
 
-Temperature Expansiopn effects on the ADC output <br> ![T° expansion ramp graph](https://github.com/Driss-001/Capstone_G2_2022-2023/blob/main/Test1_ADC_output_100_10000_2023-03-22-17-12.png?raw=true)<br>
+![](https://github.com/Driss-001/Capstone_G2_2022-2023/blob/main/Test1_Setup.png?raw=true)<br>

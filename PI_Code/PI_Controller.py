@@ -68,7 +68,7 @@ class PI_Controller:
     """
     
     #Initialisation
-    def __init__(self,test = 0,continuous = 0,test_duration = 5,prototype = 0,dpi = 300,sampling_f = 200, autorun = 0,save_dir = cwd, c_noise = False, conc = 100, Training = False,n_iter = 10, detection = False ) -> None:
+    def __init__(self,test = 0,test_duration = 5,dpi = 300,sampling_f = 100, autorun = 0,save_dir = cwd, c_noise = False,n_iter = 10, conc = 100, Training = False, detection = False) -> None:
 
         self.test_status = test
         self.concentration = conc
@@ -82,7 +82,6 @@ class PI_Controller:
         self.data_dir =   save_dir+'/PI_Code/training/'                  
         self.m_run = c_noise
         self.current_date = dt.datetime.now().strftime('%Y-%m-%d-%H-%M')
-        self.continuous = continuous #if reading loops itself
         self.test_duration = test_duration           
         self.active = True
         self.dpi = dpi
@@ -102,32 +101,7 @@ class PI_Controller:
        
             
     
-    #Streamlined ADC/DAC function to manipulate in/out voltages
 
-    def set_DAC(self,voltage): #set dac ouput voltage
-        if voltage > VMAX:
-            voltage = VMAX
-        dac_volt = round(voltage/VMAX*(2**DAC_res-1))    
-          
-        try:
-            self.dac._write_fast_mode(dac_volt)#attempt write fast-mode
-        except:
-            print(f"DAC voltage output must be between 0 and {VMAX} V")  
-    
-    def ADC_volt(self,channel = 0)->float: #return ADC voltage from selected channel
-        match channel:
-            case 0:
-                chan0 = AnalogIn(adc,ADS.P0)
-                return chan0.voltage
-            case 1:
-                chan1 = AnalogIn(adc,ADS.P1)
-                return chan1.voltage                  
-            case 2:
-                chan2 = AnalogIn(adc,ADS.P2)
-                return chan2.voltage                 
-            case 3:
-                chan3 = AnalogIn(adc,ADS.P3)
-                return chan3.voltage 
 
     def Run(self) -> None: #activate switch function , auto-start
     
@@ -163,7 +137,7 @@ class PI_Controller:
         self.th1.join()
 
 
-    def M_Run(self,n_iter = 10):
+    def M_Run(self,n_iter = 10)->None:
         ADC_Gauss = np.zeros(self.num_samples)
         for i in range(0,n_iter):
             self.Run()
@@ -186,7 +160,7 @@ class PI_Controller:
         self.active = not self.active
         print(f"active bool is now {self.active}")
 
-    def De_Activate(self):
+    def De_Activate(self)-> None:
         self.active = False
 
     def Reset_time(self):
@@ -196,7 +170,7 @@ class PI_Controller:
         self._init_arrays()    
 
 
-    def pwm_stop(self):
+    def pwm_stop(self)->None:
 
         pwm.hardware_PWM(RPI_pin, 0, 0)               # turn off the PWM
 
@@ -240,6 +214,33 @@ class PI_Controller:
 
     """Hardware functions"""
 
+    #Streamlined ADC/DAC function to manipulate in/out voltages
+
+    def _set_DAC(self,voltage)->None: #set dac ouput voltage
+        if voltage > VMAX:
+            voltage = VMAX
+        dac_volt = round(voltage/VMAX*(2**DAC_res-1))    
+          
+        try:
+            self.dac._write_fast_mode(dac_volt)#attempt write fast-mode
+        except:
+            print(f"DAC voltage output must be between 0 and {VMAX} V")  
+    
+    def _ADC_volt(self,channel = 0)->float: #return ADC voltage from selected channel
+        match channel:
+            case 0:
+                chan0 = AnalogIn(adc,ADS.P0)
+                return chan0.voltage
+            case 1:
+                chan1 = AnalogIn(adc,ADS.P1)
+                return chan1.voltage                  
+            case 2:
+                chan2 = AnalogIn(adc,ADS.P2)
+                return chan2.voltage                 
+            case 3:
+                chan3 = AnalogIn(adc,ADS.P3)
+                return chan3.voltage 
+            
     def _init_DAC(self)->None: #Initialise DAC module
         self.dac = MCP.MCP4725(address=DAC_ADDRESS,i2c=i2c1)
 
@@ -250,7 +251,7 @@ class PI_Controller:
             
             #print(f"counter aues is: {self.counter}")
             dac_order =self._triangle(self.t_period,VMAX)     
-            self.set_DAC(dac_order)
+            self._set_DAC(dac_order)
             self.dac_order.append(dac_order)
             self.dac_order_time.append(self._now())
             return
@@ -278,12 +279,12 @@ class PI_Controller:
     def __PhotoDRead(self) -> None:
    
         if not self._test[1] and not self._test[0]: #case signals    """Hardware functions"""
-            self.adc_output.append(self.ADC_volt(0))
-            self.pwm_output.append(self.ADC_volt(1))
+            self.adc_output.append(self._ADC_volt(0))
+            self.pwm_output.append(self._ADC_volt(1))
             self.adc_output_time.append(self._now(self.t_start))
             return 
         if not self._test[1] and  self._test[0]:
-            self.adc_output.append(self.ADC_volt(2))
+            self.adc_output.append(self._ADC_volt(2))
             self.adc_output_time.append(self._now(self.t_start))
         pass    
 
@@ -352,7 +353,7 @@ class PI_Controller:
 
     """Private functions for data handling"""
 
-    def _model(self):
+    def _model(self)->function:
         l = []
         c = []
         corr_min = []
@@ -370,7 +371,7 @@ class PI_Controller:
         lin_model = lambda x: m1.intercept+x*m1.slope  
         return lin_model       
     
-    def _local_min(self,n):
+    def _local_min(self,n)->float:
 
         d = lambda i: (self.adc_output[i]-self.adc_output[i-1]) #difference function
         l_min = []
