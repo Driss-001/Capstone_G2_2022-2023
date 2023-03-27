@@ -344,7 +344,7 @@ class PI_Controller:
     #seasaw signal function for PWM-DC system    
     def _triangle(self,period,peak) -> float:
         now_time = self._now()
-        now_frac = now_time//(period/2) #euclidian division 
+        now_frac = now_time//(period) #euclidian division 
         now_mod = now_frac%2 #which period are we on obtained by modulus
         #linear function going from 0 to peak in period/2
 
@@ -356,7 +356,7 @@ class PI_Controller:
 
     """Private functions for data handling"""
 
-    def _model(self)->function:
+    def _model(self):
         l = []
         c = []
         corr_min = []
@@ -459,4 +459,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =0.1,n_iter = 30,sampling_f=100,autorun=1,conc=100,c_noise=True, Training=True) #10 points frequency test
+    test1 = PI_Controller(test =1,test_duration =0.1,n_iter = 30,sampling_f=100,autorun=1,conc=56,c_noise=True, Training=True) #10 points frequency test
