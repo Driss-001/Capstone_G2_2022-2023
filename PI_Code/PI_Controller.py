@@ -378,12 +378,12 @@ class PI_Controller:
 
         d = lambda i: (self.adc_output[i]-self.adc_output[i-1]) #difference function
         l_min = []
-        for i in range(1,n-1):
+        for i in range(round(0.15*n),n-1):
             if d(i) <0 and d(i+1)>0: #If dip is found store it in local minimum
                 t_min  =self.adc_output[i+1]
                 l_min.append(t_min) 
         l_min = np.array(l_min)                
-        return abs(max(self.adc_output)-min(l_min))  #returns the max distance between this measure's max voltage and global min   
+        return abs(max(self.adc_output[round(0.15*n):])-min(l_min))  #returns the max distance between this measure's max voltage and global min   
 
     
     def _figure_pkl(self,n):
@@ -459,4 +459,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =0.5,n_iter = 10,sampling_f=100,autorun=1,conc=100,c_noise=True, Training=True,detection = False) #50 points frequency test
+    test1 = PI_Controller(test =1,test_duration =.3,n_iter = 10,sampling_f=100,autorun=1,conc=27,c_noise=False, Training=True,detection = False) #30 points frequency test
