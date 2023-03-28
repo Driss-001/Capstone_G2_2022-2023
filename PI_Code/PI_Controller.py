@@ -176,7 +176,7 @@ class PI_Controller:
 
     def conc_detect(self,n):
         f = self._model()
-        current_min = self._local_min(n)#min(self.adc_output[0:n])
+        current_min = self._abs_coef(n)#min(self.adc_output[0:n])
         self.concentration = round(f(current_min),2)
          
         
@@ -374,24 +374,25 @@ class PI_Controller:
         lin_model = lambda x: m1.intercept+x*m1.slope  
         return lin_model       
     
-    def _local_min(self,n)->float:
+    def _abs_coef(self,n)->float:
 
         d = lambda i: (self.adc_output[i]-self.adc_output[i-1]) #difference function
-        l_min = []
-        for i in range(round(0.4*n),n-1):
-            if d(i) <0 and d(i+1)>0: #If dip is found store it in local minimum
+        l_max = []
+        for i in range(0,round(0.4*n)):
+            if d(i) >0 and d(i+1)<0: #find local maximas in the non dip region
                 t_min  =self.adc_output[i+1]
-                l_min.append(t_min) 
-        l_min = np.array(l_min)
+                l_max.append(t_min) 
+        l_max = np.array(l_max)
 
-        return abs(np.average(self.adc_output[:round(0.4*n)])-min(self.adc_output[round(0.4*n):round(0.85*n)]))  #returns the distance between average on the non dip zone and min of dip zone
+        #returns the ratio between average on the maximas in thr non dip zone zone and minimum of dip zone for Vsupply = 5V
+        return (min(self.adc_output[round(0.4*n):round(0.8*n)])/np.average(l_max))  #the absorption coefficient to bypass the light power variation
 
     
     def _figure_pkl(self,n):
         if not self._test[1] and not self._test[0]: #Test 0 save (x,y) coords
             self._topkl(self.adc_output_time[0:n],self.adc_output[0:n],self.pwm_output[0:n])
         if not self._test[1] and  self._test[0]:    #Test 1 save (x,y) coords, min(y) & gas concentration
-            self._topkl(self.adc_output_time[0:n],self.adc_output[0:n],self._local_min(n),self.concentration)         
+            self._topkl(self.adc_output_time[0:n],self.adc_output[0:n],self._abs_coef(n),self.concentration)         
 
     def _save_figs(self,n) -> None:
         if not self._test[1] and not self._test[0]:
