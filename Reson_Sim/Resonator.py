@@ -213,7 +213,7 @@ class Resonator:
         plt.ylabel("Correlation")
         
     def cmin(self) -> None:
-        return(min(self.correlation))
+        return(min(self.correlation)/max(self.correlation))
     
     """Private Functions"""
 
