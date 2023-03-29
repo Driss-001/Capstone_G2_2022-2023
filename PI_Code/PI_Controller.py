@@ -461,4 +461,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =.5,n_iter = 30,sampling_f=100,autorun=1,conc=50.33,c_noise=True, Training=True,detection = False) #30 points frequency test
+    test1 = PI_Controller(test =1,test_duration =.5,n_iter = 30,sampling_f=100,autorun=1,conc=0,c_noise=False, Training=False,detection =True) #30 points frequency test
