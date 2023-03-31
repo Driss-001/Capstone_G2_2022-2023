@@ -56,7 +56,7 @@ pwm.start(0)
 
 
 #Number of triangle ramp signal/correlations wanted
-CORR_NUM = 1
+CORR_NUM = 2
 cwd  = os.getcwd()
 
 class PI_Controller:
@@ -68,9 +68,10 @@ class PI_Controller:
     """
     
     #Initialisation
-    def __init__(self,test = 0,test_duration = 5,dpi = 300,sampling_f = 100, autorun = 0,save_dir = cwd, c_noise = False,n_iter = 10, conc = 100, Training = False, detection = False) -> None:
+    def __init__(self,test = 0,test_duration = 5,dpi = 300,V_supply = 7.2,sampling_f = 100, autorun = 0,save_dir = cwd, c_noise = False,n_iter = 10, conc = 100, Training = False, detection = False) -> None:
 
         self.test_status = test
+        self.v_supply = V_supply
         self.concentration = conc
         self.Training = Training
         self.n_iter = n_iter
@@ -81,7 +82,7 @@ class PI_Controller:
             self.save_dir = save_dir+'/PI_Code/data/'
         self.data_dir =   save_dir+'/PI_Code/training/'                  
         self.m_run = c_noise
-        self.current_date = dt.datetime.now().strftime('%Y-%m-%d-%H-%M')
+        self.current_date = dt.datetime.now().strftime('%m-%d-%H-%M')
         self.test_duration = test_duration           
         self.active = True
         self.dpi = dpi
@@ -179,7 +180,18 @@ class PI_Controller:
         current_min = self._abs_coef(n)#min(self.adc_output[0:n])
         self.concentration = round(f(current_min),2)
          
+
+    def display_Reg(self): #Display current linear regression
+        f = self._model()
+        dip = np.linspace(min(self._cmin)*.999,max(self._cmin)*1.001,100)
+        conc = np.vectorize(f)(dip)
+        plt.plot(dip,conc)
+        plt.scatter(self._cmin,self._c,c="r")
+        plt.ylabel('Concentration (%)')
+        plt.xlabel('Absorption Coefficient')
+        plt.title(f"Current Training DB Regression Line ,date:{self.current_date}")
         
+
     """Private functions in charge of hardware signal sending and collection"""
 
 
@@ -371,6 +383,8 @@ class PI_Controller:
         corr_min = np.array(corr_min)
         c = np.array(c)  
         m1 = linregress(corr_min,c)
+        self._c = c
+        self._cmin = corr_min
         lin_model = lambda x: m1.intercept+x*m1.slope  
         return lin_model       
     
@@ -378,14 +392,15 @@ class PI_Controller:
 
         d = lambda i: (self.adc_output[i]-self.adc_output[i-1]) #difference function
         l_max = []
-        for i in range(0,round(0.4*n)):
+
+        for i in range(0,round(n)):
             if d(i) >0 and d(i+1)<0: #find local maximas in the non dip region
                 t_min  =self.adc_output[i+1]
                 l_max.append(t_min) 
         l_max = np.array(l_max)
 
         #returns the ratio between average on the maximas in thr non dip zone zone and minimum of dip zone for Vsupply = 5V
-        return (min(self.adc_output[round(0.4*n):round(0.8*n)])/np.average(l_max))  #the absorption coefficient to bypass the light power variation
+        return (min(self.adc_output)/max(self.adc_output))  #the absorption coefficient to bypass the light power variation
 
     
     def _figure_pkl(self,n):
@@ -461,4 +476,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =.5,n_iter = 30,sampling_f=100,autorun=1,conc=0,c_noise=False, Training=False,detection =True) #30 points frequency test
+    test1 = PI_Controller(test =1,test_duration =.5,n_iter = 20,sampling_f=100,autorun=1,conc=0,c_noise=True, Training=False,detection =False) #30 points frequency test
