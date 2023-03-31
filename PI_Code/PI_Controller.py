@@ -435,8 +435,8 @@ class PI_Controller:
             plt.legend(["ADC chan1 output  (Photodiode)"])    
             plt.ylabel('Voltage (V)')
             plt.xlabel('time(s)')
-            plt.title(f"Rpi4 IO DAC/ADC Test1,sampling @ {self.sampling_f}Hz,{self.num_samples} points,CO2 concentration {self.concentration}%")
-            plt.savefig(f"Test1_ADC_output_C{int(round(self.concentration))}_{self.num_samples}smpls_{self.current_date}.png",dpi = self.dpi)
+            plt.title(f"Rpi4 IO DAC/ADC Test1,CO2 concentration {self.concentration}%")
+            plt.savefig(f"Test1_ADC_output_C{int(round(self.concentration))}_ {self.v_supply}V_{self.current_date}.png",dpi = self.dpi)
             plt.clf()   
 
         print("figure Saved!") 
