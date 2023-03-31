@@ -207,13 +207,21 @@ class Resonator:
         plt.ylabel("Normalised Power")
 
     def display_correlation(self)->None:
+        c_max = max(self.correlation)
+        c_min = min(self.correlation)
         plt.figure(dpi=300)
+        plt.scatter(self.temperature[self.correlation == c_max][0],c_max,c = "green")
+        plt.scatter(self.temperature[self.correlation == c_min][0],c_min,c = "red")
         plt.plot(self.temperature,self.correlation)
+
         plt.xlabel("Temperature change °C")
         plt.ylabel("Correlation")
+        plt.legend(["Max","Min"])
         
     def cmin(self) -> None:
-        return(min(self.correlation)/max(self.correlation))
+        
+        return(min(self.correlation))
+        
     
     """Private Functions"""
 

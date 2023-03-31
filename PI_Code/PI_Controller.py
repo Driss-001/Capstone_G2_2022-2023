@@ -178,7 +178,7 @@ class PI_Controller:
 
     def conc_detect(self,n):
         f = self._model()
-        current_min = self._abs_coef(n)#min(self.adc_output[0:n])
+        current_min = self._corr_min(n)#min(self.adc_output[0:n])
         self.concentration = round(f(current_min),2)
          
 
@@ -189,7 +189,7 @@ class PI_Controller:
         plt.plot(dip,conc)
         plt.scatter(self._cmin,self._c,c="r")
         plt.ylabel('Concentration (%)')
-        plt.xlabel('Absorption Coefficient')
+        plt.xlabel('Minimum Voltage Detected(V)')
         plt.title(f"Current Training DB Regression Line ,date:{self.current_date}")
         
 
@@ -389,7 +389,7 @@ class PI_Controller:
         lin_model = lambda x: m1.intercept+x*m1.slope  
         return lin_model       
     
-    def _abs_coef(self,n)->float:
+    def _corr_min(self,n)->float:
 
         d = lambda i: (self.adc_output[i]-self.adc_output[i-1]) #difference function
         l_max = []
@@ -407,14 +407,14 @@ class PI_Controller:
         l_max = np.array(l_max)
 
         #returns the ratio between average on the maximas in thr non dip zone zone and minimum of dip zone for Vsupply = 5V
-        return (min(self.adc_output)/max(self.adc_output))  #the absorption coefficient to bypass the light power variation
+        return (min(self.adc_output[mt.floor(0.4*dip_perc*n):round(0.6*dip_perc*n)]))  #the minimum voltage in the anticipated dip zone
 
     
     def _figure_pkl(self,n):
         if not self._test[1] and not self._test[0]: #Test 0 save (x,y) coords
             self._topkl(self.adc_output_time[0:n],self.adc_output[0:n],self.pwm_output[0:n])
         if not self._test[1] and  self._test[0]:    #Test 1 save (x,y) coords, min(y) & gas concentration
-            self._topkl(self.adc_output_time[0:n],self.adc_output[0:n],self._abs_coef(n),self.concentration)         
+            self._topkl(self.adc_output_time[0:n],self.adc_output[0:n],self._corr_min(n),self.concentration)         
 
     def _save_figs(self,n) -> None:
         if not self._test[1] and not self._test[0]:
