@@ -68,13 +68,14 @@ class PI_Controller:
     """
     
     #Initialisation
-    def __init__(self,test = 0,test_duration = 5,dpi = 300,V_supply = 7.2,sampling_f = 100, autorun = 0,save_dir = cwd, c_noise = False,n_iter = 10, conc = 100, Training = False, detection = False) -> None:
+    def __init__(self,test = 0,test_duration = 5,dpi = 300,V_supply = 5,sampling_f = 100, autorun = 0,save_dir = cwd, c_noise = False,n_iter = 10, conc = 100, Training = False, detection = False,resistance = 72) -> None:
 
         self.test_status = test
         self.v_supply = V_supply
         self.concentration = conc
         self.Training = Training
         self.n_iter = n_iter
+        self.resist = resistance
         self.detection =  detection
         if self.Training:
             self.save_dir = save_dir+'/PI_Code/training/'
@@ -392,8 +393,14 @@ class PI_Controller:
 
         d = lambda i: (self.adc_output[i]-self.adc_output[i-1]) #difference function
         l_max = []
+        V_100 = self.resist/10
+        dip_perc = 1
+        
+        if V_100>=self.v_supply:
+            dip_perc = self.v_supply/V_100/CORR_NUM
+        
 
-        for i in range(0,round(n)):
+        for i in range(0,round(n*dip_perc)):
             if d(i) >0 and d(i+1)<0: #find local maximas in the non dip region
                 t_min  =self.adc_output[i+1]
                 l_max.append(t_min) 
@@ -476,4 +483,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =.5,n_iter = 20,sampling_f=100,autorun=1,conc=0,c_noise=True, Training=False,detection =False) #30 points frequency test
+    test1 = PI_Controller(test =1,test_duration =.5,V_supply=5,n_iter = 20,sampling_f=100,autorun=1,conc=0,c_noise=True, Training=False,detection =False) #30 points frequency test
