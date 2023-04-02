@@ -407,7 +407,7 @@ class PI_Controller:
         l_max = np.array(l_max)
 
         #returns the ratio between average on the maximas in thr non dip zone zone and minimum of dip zone for Vsupply = 5V
-        level = 2-max(self.adc_output[0:round(0.3*dip_perc*n)])
+        level = 0.085-max(self.adc_output[0:round(0.3*dip_perc*n)])
         return (min(self.adc_output[mt.floor(0.4*dip_perc*n):round(0.6*dip_perc*n)])+level)  #the minimum voltage in the anticipated dip zone
 
     
@@ -484,4 +484,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =.5,V_supply=7.2,n_iter = 20,sampling_f=100,autorun=1,conc=100,c_noise=True, Training=False,detection = True) #50 points frequency teut
+    test1 = PI_Controller(test =1,test_duration =1,V_supply=5,n_iter = 15,sampling_f=100,autorun=1,conc=100,c_noise=True, Training=False,detection = False) #50 points frequency teut
