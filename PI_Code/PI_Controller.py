@@ -406,7 +406,13 @@ class PI_Controller:
         l_max = np.array(l_max)
 
         #returns the ratio between average on the maximas in thr non dip zone zone and minimum of dip zone for Vsupply = 5V
-        level = np.max(np.union1d(self.adc_output[0:mt.round((0.3+1-self.dip_perc)*n)],self.adc_output[mt.round((0.7+1-self.dip_perc)*n):]))
+        if 0.7+1-self.dip_perc > 1:
+            print("max out of bound")
+            level = np.average(self.adc_output[0:mt.round((0.3+1-self.dip_perc)*n)])
+        else:    
+            level = np.average(np.union1d(self.adc_output[0:mt.round((0.3+1-self.dip_perc)*n)],self.adc_output[mt.round((0.7+1-self.dip_perc)*n):]))
+
+     
         return (level-np.average(self.adc_output[mt.floor((0.4+1-self.dip_perc)*n):round((0.6+1-self.dip_perc)*n)]))  #the minimum voltage in the anticipated dip zone
 
     
