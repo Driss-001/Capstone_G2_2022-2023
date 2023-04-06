@@ -394,21 +394,20 @@ class PI_Controller:
         d = lambda i: (self.adc_output[i]-self.adc_output[i-1]) #difference function
         l_max = []
         V_100 = self.resist/10
-        self.dip_perc = 1
+        self.dip_perc = self.v_supply/V_100/CORR_NUM
         
-        if V_100>=self.v_supply:
-            self.dip_perc = self.v_supply/V_100/CORR_NUM
+ 
         
 
-        for i in range(0,round(n*self.dip_perc)):
+        for i in range(0,round(n)):
             if d(i) >0 and d(i+1)<0: #find local maximas in the non dip region
                 t_min  =self.adc_output[i+1]
                 l_max.append(t_min) 
         l_max = np.array(l_max)
 
         #returns the ratio between average on the maximas in thr non dip zone zone and minimum of dip zone for Vsupply = 5V
-        level = np.average(self.adc_output[0:round(0.2*self.dip_perc*n)])
-        return (level-np.average(self.adc_output[mt.floor(0.4*self.dip_perc*n):round(0.6*self.dip_perc*n)]))  #the minimum voltage in the anticipated dip zone
+        level = np.max(np.union1d(self.adc_output[0:mt.round((0.3+1-self.dip_perc)*n)],self.adc_output[mt.round((0.7+1-self.dip_perc)*n):]))
+        return (level-np.average(self.adc_output[mt.floor((0.4+1-self.dip_perc)*n):round((0.6+1-self.dip_perc)*n)]))  #the minimum voltage in the anticipated dip zone
 
     
     def _figure_pkl(self,n):
@@ -440,7 +439,7 @@ class PI_Controller:
             return
         if not self._test[1] and  self._test[0]:  
             plt.plot(self.adc_output_time[0:n],self.adc_output[0:n],c="green")
-            plt.fill_between(self.adc_output_time[mt.floor(0.4*self.dip_perc*n):round(0.6*self.dip_perc*n)],len(self.adc_output_time[mt.floor(0.4*self.dip_perc*n):round(0.6*self.dip_perc*n)])*[np.max(self.adc_output)])
+            plt.fill_between(self.adc_output_time[mt.floor((0.4+1-self.dip_perc)*n):round((0.6+1-self.dip_perc)*n)],len(self.adc_output_time[mt.floor((0.4+1-self.dip_perc)*n):round((0.6+1-self.dip_perc)*n)])*[np.max(self.adc_output)])
             plt.legend(["ADC chan1 output  (Photodiode)","Anticipated minimum zone"])    
             plt.ylabel('Voltage (V)')
             plt.xlabel('time(s)')
