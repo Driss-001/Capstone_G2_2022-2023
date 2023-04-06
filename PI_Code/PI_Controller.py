@@ -444,7 +444,7 @@ class PI_Controller:
             plt.legend(["ADC chan1 output  (Photodiode)","Anticipated minimum zone"])    
             plt.ylabel('Voltage (V)')
             plt.xlabel('time(s)')
-            plt.title(f"Rpi4 IO DAC/ADC Test1,CO2 concentration {self.concentration}%")
+            plt.title(f"Rpi4 IO DAC/ADC Test1,CO2 concentration {self.concentration}%,Suppluy voltage {self.v_supply} V")
             plt.savefig(f"Test1_ADC_output_C{int(round(self.concentration))}_ {self.v_supply}V_{self.current_date}.png",dpi = self.dpi)
             plt.clf()   
 
