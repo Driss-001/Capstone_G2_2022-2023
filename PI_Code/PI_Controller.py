@@ -178,7 +178,7 @@ class PI_Controller:
 
     def conc_detect(self,n):
         f = self._model()
-        current_min = self._corr_min(n)#min(self.adc_output[0:n-1)
+        current_min = self._corr_min(n)#min(self.adc_output[0:n-1])
         self.concentration = round(f(current_min),2)
          
 
@@ -424,10 +424,10 @@ class PI_Controller:
 
     def _save_figs(self,n) -> None:
         if not self._test[1] and not self._test[0]:
-            plt.plot(self.dac_order_time[0:n-1,self.dac_order[0:n-1],c ="black")
+            plt.plot(self.dac_order_time[0:n-1],self.dac_order[0:n-1],c ="black")
             print(len(self.adc_output),len(self.adc_output_time),n)
-            plt.scatter(self.adc_output_time[0:n-1,self.adc_output[0:n-1,c="red")
-            plt.scatter(self.adc_output_time[0:n-1,self.pwm_output[0:n-1,c="green")
+            plt.scatter(self.adc_output_time[0:n-1],self.adc_output[0:n-1],c="red")
+            plt.scatter(self.adc_output_time[0:n-1],self.pwm_output[0:n-1],c="green")
             plt.legend(["DAC py-order","ADC chan0 output (DAC)","ADC chan 1 output(PWM)"])
             plt.ylabel('Voltage (V)')
             plt.xlabel('time(s)')
@@ -444,7 +444,7 @@ class PI_Controller:
             #plt.savefig("Test0_Latency_output",dpi = self.dpi)
             return
         if not self._test[1] and  self._test[0]:  
-            plt.plot(self.adc_output_time[0:n-1,self.adc_output[0:n-1,c="green")
+            plt.plot(self.adc_output_time[0:n-1],self.adc_output[0:n-1],c="green")
             plt.fill_between(self.adc_output_time[mt.floor((0.4+1-self.dip_perc)*n):round((0.6+1-self.dip_perc)*n)],len(self.adc_output_time[mt.floor((0.4+1-self.dip_perc)*n):round((0.6+1-self.dip_perc)*n)])*[np.max(self.adc_output)],alpha = 0.3)
             plt.legend(["ADC chan1 output  (Photodiode)","Anticipated minimum zone"])    
             plt.ylabel('Voltage (V)')
