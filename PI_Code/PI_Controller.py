@@ -408,9 +408,9 @@ class PI_Controller:
         #returns the ratio between average on the maximas in thr non dip zone zone and minimum of dip zone for Vsupply = 5V
         if 0.7+1-self.dip_perc > 1:
             print("max out of bound")
-            level = np.average(self.adc_output[0:mt.round((0.3+1-self.dip_perc)*n)])
+            level = np.average(self.adc_output[0:round((0.3+1-self.dip_perc)*n)])
         else:    
-            level = np.average(np.union1d(self.adc_output[0:mt.round((0.3+1-self.dip_perc)*n)],self.adc_output[mt.round((0.7+1-self.dip_perc)*n):]))
+            level = np.average(np.union1d(self.adc_output[0:round((0.3+1-self.dip_perc)*n)],self.adc_output[round((0.7+1-self.dip_perc)*n):]))
 
      
         return (level-np.average(self.adc_output[mt.floor((0.4+1-self.dip_perc)*n):round((0.6+1-self.dip_perc)*n)]))  #the minimum voltage in the anticipated dip zone
@@ -445,11 +445,11 @@ class PI_Controller:
             return
         if not self._test[1] and  self._test[0]:  
             plt.plot(self.adc_output_time[0:n],self.adc_output[0:n],c="green")
-            plt.fill_between(self.adc_output_time[mt.floor((0.4+1-self.dip_perc)*n):round((0.6+1-self.dip_perc)*n)],len(self.adc_output_time[mt.floor((0.4+1-self.dip_perc)*n):round((0.6+1-self.dip_perc)*n)])*[np.max(self.adc_output)])
+            plt.fill_between(self.adc_output_time[mt.floor((0.4+1-self.dip_perc)*n):round((0.6+1-self.dip_perc)*n)],len(self.adc_output_time[mt.floor((0.4+1-self.dip_perc)*n):round((0.6+1-self.dip_perc)*n)])*[np.max(self.adc_output)],alpha = 0.3)
             plt.legend(["ADC chan1 output  (Photodiode)","Anticipated minimum zone"])    
             plt.ylabel('Voltage (V)')
             plt.xlabel('time(s)')
-            plt.title(f"Rpi4 IO DAC/ADC Test1,CO2 concentration {self.concentration}%,Suppluy voltage {self.v_supply} V")
+            plt.title(f"Rpi4 IO DAC/ADC Test1,CO2 concentration {self.concentration}%,Supply voltage {self.v_supply} V")
             plt.savefig(f"Test1_ADC_output_C{int(round(self.concentration))}_ {self.v_supply}V_{self.current_date}.png",dpi = self.dpi)
             plt.clf()   
 
