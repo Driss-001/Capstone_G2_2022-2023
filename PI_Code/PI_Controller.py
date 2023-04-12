@@ -152,7 +152,10 @@ class PI_Controller:
                 self._init_arrays()
                 self.Switch()
                 pwm.start(1)      
-        self.adc_output = ADC_Gauss     
+        self.adc_output = ADC_Gauss
+        if self.detection:
+            self.conc_detect(n)
+            print(f"CO2 concentration detected :{self.concentration}%")     
         n = self.num_samples
         self._figure_pkl(n)
         self._save_figs(n)
@@ -399,11 +402,11 @@ class PI_Controller:
  
         
 
-        for i in range(0,round(n)):
-            if d(i) >0 and d(i+1)<0: #find local maximas in the non dip region
-                t_min  =self.adc_output[i+1]
-                l_max.append(t_min) 
-        l_max = np.array(l_max)
+        #for i in range(0,round(n)):
+        #    if d(i) >0 and d(i+1)<0: #find local maximas in the non dip region
+        #        t_min  =self.adc_output[i+1]
+        #        l_max.append(t_min) 
+        #l_max = np.array(l_max)
 
         #returns the ratio between average on the maximas in thr non dip zone zone and minimum of dip zone for Vsupply = 5V
         if 0.7+1-self.dip_perc > 1:
@@ -412,8 +415,9 @@ class PI_Controller:
         else:    
             level = np.average(np.union1d(self.adc_output[0:round((0.3+1-self.dip_perc)*n)],self.adc_output[round((0.7+1-self.dip_perc)*n):]))
 
-     
-        return (level-np.average(self.adc_output[mt.floor((0.4+1-self.dip_perc)*n):round((0.6+1-self.dip_perc)*n)]))  #the minimum voltage in the anticipated dip zone
+        res_1 = level-np.average(self.adc_output[mt.floor((0.4+1-self.dip_perc)*n):round((0.6+1-self.dip_perc)*n)])
+        res_2 = np.max(self.adc_output)-np.min(self.adc_output)
+        return (res_2)  #the minimum voltage in the anticipated dip zone
 
     
     def _figure_pkl(self,n):
@@ -444,7 +448,7 @@ class PI_Controller:
             #plt.savefig("Test0_Latency_output",dpi = self.dpi)
             return
         if not self._test[1] and  self._test[0]:  
-            plt.plot(self.adc_output_time[0:n-1],self.adc_output[0:n-1],c="green")
+            plt.plot(self.adc_output_time[0:n-1],self.adc_output[0:n-1],c="g")
             plt.fill_between(self.adc_output_time[mt.floor((0.4+1-self.dip_perc)*n):round((0.6+1-self.dip_perc)*n)],len(self.adc_output_time[mt.floor((0.4+1-self.dip_perc)*n):round((0.6+1-self.dip_perc)*n)])*[np.max(self.adc_output)],alpha = 0.3)
             plt.legend(["ADC chan1 output  (Photodiode)","Anticipated minimum zone"])    
             plt.ylabel('Voltage (V)')
@@ -490,4 +494,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =1,V_supply=9.02,n_iter = 10,sampling_f=100,autorun=1,conc=100,c_noise=True, Training = False,detection = False ) #10 points frequency teut
+    test1 = PI_Controller(test =1,test_duration =1,V_supply=9.02,n_iter = 15,sampling_f=100,autorun=1,conc=100,c_noise=False, Training = False,detection = False ) #10 points frequency teut
