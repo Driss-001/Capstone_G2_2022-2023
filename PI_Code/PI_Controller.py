@@ -68,7 +68,7 @@ class PI_Controller:
     """
     
     #Initialisation
-    def __init__(self,test = 0,test_duration = 5,dpi = 300,V_supply = 5,sampling_f = 100, autorun = 0,save_dir = cwd, c_noise = False,n_iter = 10, conc = 100, Training = False, detection = False,resistance = 72) -> None:
+    def __init__(self,test = 0,test_duration = 5,dpi = 300,V_supply = 5,sampling_f = 100, autorun = 0,save_dir = cwd, c_noise = False,n_iter = 10, conc = 100, Training = False, detection = False,resistance = 94) -> None:
 
         self.test_status = test
         self.v_supply = V_supply
@@ -490,4 +490,4 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =.1,V_supply=5,n_iter = 15,sampling_f=100,autorun=1,conc=100,c_noise=False, Training = False,detection = True ) #10 points frequency teut
+    test1 = PI_Controller(test =5,test_duration =.1,V_supply=5,n_iter = 15,sampling_f=100,autorun=1,conc=100,c_noise=False, Training = False,detection = True ) #10 points frequency teut
