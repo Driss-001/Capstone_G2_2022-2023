@@ -220,7 +220,7 @@ class Resonator:
         
     def cmin(self) -> None:
         
-        return(max(self.correlation)-min(self.correlation))
+        return(np.std(self.correlation))
         
     
     """Private Functions"""

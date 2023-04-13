@@ -418,7 +418,8 @@ class PI_Controller:
 
         res_1 = level-np.average(self.adc_output[mt.floor((0.4+1-self.dip_perc)*n):round((0.6+1-self.dip_perc)*n)])
         res_2 = np.max(self.adc_output)-np.min(self.adc_output)
-        return (res_2)  #the minimum voltage in the anticipated dip zone
+        res_3 =  np.std(self.adc_output)
+        return (res_3)  #the standard deviation
 
     
     def _figure_pkl(self,n):
