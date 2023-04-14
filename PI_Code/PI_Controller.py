@@ -145,7 +145,7 @@ class PI_Controller:
             self.Run()
             ADC_Gauss+= np.array(self.adc_output[0:self.num_samples])/n_iter
             pwm.stop()
-            time.sleep(0.5) #buffer
+            time.sleep(5e-3) #buffer
             if i == n_iter-1:
                 pass
             else:
@@ -451,7 +451,7 @@ class PI_Controller:
             return
         if not self._test[1] and  self._test[0]:  
             plt.plot(self.adc_output_time[0:n-1],self.adc_output[0:n-1],c="g")
-            plt.fill_between(self.adc_output_time[mt.floor((0.4+1-self.dip_perc)*n):round((0.6+1-self.dip_perc)*n)],len(self.adc_output_time[mt.floor((0.4+1-self.dip_perc)*n):round((0.6+1-self.dip_perc)*n)])*[np.max(self.adc_output)],alpha = 0.3)
+            plt.fill_between(self.adc_output_time[mt.floor((0.4+1-self.dip_perc)*n):round((0.6+1-self.dip_perc)*n)],len(self.adc_output_time[mt.floor((0.4+1-self.dip_perc)*n):round((0.6+1-self.dip_perc)*n)])*[np.max(self.adc_output)],self.adc_output[t.floor((0.4+1-self.dip_perc)*n):round((0.6+1-self.dip_perc)*n)],alpha = 0.3)
             plt.legend(["ADC chan1 output  (Photodiode)","Anticipated minimum zone"])    
             plt.ylabel('Voltage (V)')
             plt.xlabel('time(s)')
@@ -496,5 +496,5 @@ class PI_Controller:
 
 if __name__ == '__main__':
     #test0 = PI_Controller(test_duration=20/60)
-    test1 = PI_Controller(test =1,test_duration =1,V_supply=9.02,n_iter = 15,sampling_f=100,autorun=0,conc=20,c_noise=True, Training = True,detection = False ) #10 points frequency teut
+    test1 = PI_Controller(test =1,test_duration =1,V_supply=9.02,n_iter = 50,sampling_f=100,autorun=0,conc=80,c_noise=True, Training = True,detection = False ) #10 points frequency teut
     test1.display_Reg()
